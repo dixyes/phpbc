@@ -1,0 +1,16 @@
+{
+    "name": "dixyes/phpbc",
+    "description": "PHP behavior change tester",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "dixyes",
+            "email": "dixyes@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {"PHPbc\\": "src/"}
+    },
+    "require": {}
+}
