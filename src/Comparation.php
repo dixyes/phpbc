@@ -69,6 +69,10 @@ class Comparation{
     }
     public function report(): array{
         if(count($this->ctrl->results) !== count($this->expr->results)){
+            echo "ctrl test results is";
+            var_dump($this->ctrl->results);
+            echo "expr test results is";
+            var_dump($this->expr->results);
             throw new ComparationException(sprintf("control tests number %d is not same as expriment's %d", count($this->ctrl->results), count($this->expr->results)));
         }
         foreach($this->ctrl->results as $ctest => $_){
