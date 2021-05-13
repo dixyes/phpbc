@@ -49,6 +49,7 @@ class Util{
         $tests = [];
         $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path));
         $it->rewind();
+        $sum = 0;
         while($it->valid()){
             if(!$it->isDot()){
                 $dir = $it->getSubPath();
@@ -79,6 +80,7 @@ class Util{
                             $tests[$dir] = [];
                         }
                         $tests[$dir][] = $fn;
+                        $sum++;
                     }
                 }
             }
@@ -86,6 +88,7 @@ class Util{
         }
         uksort($tests, [Util::class, "test_dir_cmp"]);
         //var_dump(array_keys($tests));
+        Log::i("found", $sum, "tests");
         return $tests;
     }
     // stolen from run-tests.php

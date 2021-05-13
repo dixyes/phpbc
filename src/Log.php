@@ -95,10 +95,10 @@ class Log{
             // in gh ci
             switch($fd){
                 case 1:
-                    fprintf(STDOUT, $unixColorStr);
+                    fprintf(STDOUT, "%s", $unixColorStr);
                     break;
                 case 2:
-                    fprintf(STDERR, $unixColorStr);
+                    fprintf(STDERR, "%s", $unixColorStr);
                     break;
                 default:
                     throw new \LogicException("bad fd num");
@@ -141,10 +141,10 @@ class Log{
         $this->changeFgColor($color, $fd);
         switch($fd){
             case 1:
-                fprintf(STDOUT, $tag);
+                fprintf(STDOUT, "%s", $tag);
                 break;
             case 2:
-                fprintf(STDERR, $tag);
+                fprintf(STDERR, "%s", $tag);
                 break;
             default:
                 throw new \LogicException("bad fd num");
@@ -158,10 +158,10 @@ class Log{
         $s = ob_get_clean();
         switch($fd){
             case 1:
-                fprintf(STDOUT, $s);
+                fprintf(STDOUT, "%s", $s);
                 break;
             case 2:
-                fprintf(STDERR, $s);
+                fprintf(STDERR, "%s", $s);
                 break;
             default:
                 throw new \LogicException("bad fd num");
@@ -201,7 +201,7 @@ class Log{
                 $realName = "_$name";
                 return self::$logger->$realName(...$args);
             default:
-                throw new \LogicException(sprintf("no such static function on Log: %d", $name));
+                throw new \LogicException(sprintf("no such static function on Log: %s", $name));
         };
     }
 }
