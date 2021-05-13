@@ -10,6 +10,7 @@ use PHPbc\Util;
 use PHPbc\Log;
 use PHPbc\Comparation;
 use PHPbc\Config;
+
 // make all warnings into exceptions
 Util::enable_error_handler();
 

@@ -76,10 +76,10 @@ class Log{
         }
     }
     private function changeFgColor(int $color, int $fd){
-        $r = ($color | self::RED) === self::RED;
-        $g = ($color | self::GREEN) === self::GREEN;
-        $b = ($color | self::BLUE) === self::BLUE;
-        $i = ($color | self::INTENSITY) === self::INTENSITY;
+        $r = ($color & self::RED) === self::RED;
+        $g = ($color & self::GREEN) === self::GREEN;
+        $b = ($color & self::BLUE) === self::BLUE;
+        $i = ($color & self::INTENSITY) === self::INTENSITY;
         
         $unixColor = [];
         if($r || $g || $b){
@@ -139,14 +139,33 @@ class Log{
             ob_start();
         }
         $this->changeFgColor($color, $fd);
-        echo $tag;
+        switch($fd){
+            case 1:
+                fprintf(STDOUT, $tag);
+                break;
+            case 2:
+                fprintf(STDERR, $tag);
+                break;
+            default:
+                throw new \LogicException("bad fd num");
+        }
         $this->changeFgColor(self::RED|self::BLUE|self::GREEN, $fd);
         if("Windows" === PHP_OS_FAMILY && extension_loaded("FFI")){
             ob_start();
         }
         $this->printThings($things);
         echo PHP_EOL;
-        ob_end_flush();
+        $s = ob_get_clean();
+        switch($fd){
+            case 1:
+                fprintf(STDOUT, $s);
+                break;
+            case 2:
+                fprintf(STDERR, $s);
+                break;
+            default:
+                throw new \LogicException("bad fd num");
+        }
 
     }
     private function _d(...$args){
