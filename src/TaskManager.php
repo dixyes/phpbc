@@ -25,9 +25,10 @@ class TaskManager {
                         continue;
                     }
                     //printf("wait done, unsetting\n");
+                    Log::i("task", $this->running[$i]->testName, "done");
                     unset($this->running[$i]);
                 }
-                Log::i("start work", $task->testName);
+                Log::i("start task", $task->testName);
                 $this->running[$i] = $task;
                 $task->start();
                 return;
@@ -43,6 +44,7 @@ class TaskManager {
                         $living++;
                         continue;
                     }
+                    Log::i("task", $this->running[$i]->testName, "done");
                     unset($this->running[$i]);
                 }
             }
