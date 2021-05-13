@@ -117,6 +117,33 @@ class Log{
             }
         }
     }
+    private function cleanFgColor(int $fd){
+        if(getenv("CI") === "true" || "Windows" !== PHP_OS_FAMILY){
+            // in gh ci
+            switch($fd){
+                case 1:
+                    fprintf(STDOUT, "%s", "\x1b[0m");
+                    break;
+                case 2:
+                    fprintf(STDERR, "%s", "\x1b[0m");
+                    break;
+                default:
+                    throw new \LogicException("bad fd num");
+            }
+        }
+        if("Windows" === PHP_OS_FAMILY && extension_loaded("FFI")){
+            switch($fd){
+                case 1:
+                    $this->ffi->SetConsoleTextAttribute($this->stdoutHandle, 0x07);
+                    break;
+                case 2:
+                    $this->ffi->SetConsoleTextAttribute($this->stderrHandle, 0x07);
+                    break;
+                default:
+                    throw new \LogicException("bad fd num");
+            }
+        }
+    }
     private function printThings(array $things){
         $items = [];
         $idx = 0;
@@ -149,7 +176,7 @@ class Log{
             default:
                 throw new \LogicException("bad fd num");
         }
-        $this->changeFgColor(self::RED|self::BLUE|self::GREEN, $fd);
+        $this->cleanFgColor($fd);
         if("Windows" === PHP_OS_FAMILY && extension_loaded("FFI")){
             ob_start();
         }
