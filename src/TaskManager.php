@@ -27,7 +27,7 @@ class TaskManager {
                     //printf("wait done, unsetting\n");
                     unset($this->running[$i]);
                 }
-                printf("start %s\n", $task->testName);
+                Log::i("start work", $task->testName);
                 $this->running[$i] = $task;
                 $task->start();
                 return;
@@ -52,7 +52,6 @@ class TaskManager {
         }
     }
     public function run(){
-        print("start running\n");
         while($this->queue->count() > 0){
             $task = $this->queue->dequeue();
             $this->findSlot($task);

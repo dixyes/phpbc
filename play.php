@@ -7,6 +7,7 @@ include_once __DIR__ . "/vendor/autoload.php";
 use PHPbc\Task;
 use PHPbc\TaskManager;
 use PHPbc\Util;
+use PHPbc\Log;
 use PHPbc\Comparation;
 use PHPbc\Config;
 // make all warnings into exceptions
@@ -16,7 +17,7 @@ Util::enable_error_handler();
 $config = Config::init();
 
 // find out all tests
-echo "start walk" . PHP_EOL;
+Log::i("start walk all tests");
 $tests = Util::walk_tests($config->ctrl["workdir"], filter: $config->tests, skip: $config->skip);
 
 // create task manager
@@ -50,6 +51,7 @@ foreach($exprTasks as $task){
 }
 
 // start tasks
+Log::i("start run tests");
 $manager->run();
 
 // compare results
@@ -64,4 +66,4 @@ $result = array_merge_recursive(...$cmps);
 // output
 file_put_contents($config->output, json_encode($result, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR));
 
-echo "end" . PHP_EOL;
+Log::i("end");

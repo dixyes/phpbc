@@ -14,11 +14,16 @@ class Comparation{
     private $diffs = [];
     private $sames = [];
     private function compare(string $test){
+        $testName = str_replace(DIRECTORY_SEPARATOR, "/", $test);
+        $cresult = $this->ctrl->results[$test];
         if(!isset($this->expr->results[$test])){
-            throw new ComparationException(sprintf("no test %s in expriment", $test));
+            Log::w("no such tests in expriment", test: $test);
+            $this->diffs[$testName] = [
+                "type" => "$cresult:UNKNOWN"
+            ];
+            return;
         }
 
-        $cresult = $this->ctrl->results[$test];
         $eresult = $this->expr->results[$test];
         $type = NULL;
         $diff = NULL;
@@ -54,11 +59,10 @@ class Comparation{
                 }
             }
         }
-        $testName = str_replace(DIRECTORY_SEPARATOR, "/", $test);
         if($diff){
             $this->diffs[$testName] = [
                 "type" => $type,
-                "diff" => mb_convert_encoding($diff, "utf8"),
+                "diff" => $diff,
             ];
         }else{
             if(!isset($this->sames[$type])){
@@ -68,13 +72,6 @@ class Comparation{
         }
     }
     public function report(): array{
-        if(count($this->ctrl->results) !== count($this->expr->results)){
-            echo "ctrl test results is";
-            var_dump($this->ctrl->results);
-            echo "expr test results is";
-            var_dump($this->expr->results);
-            throw new ComparationException(sprintf("control tests number %d is not same as expriment's %d", count($this->ctrl->results), count($this->expr->results)));
-        }
         foreach($this->ctrl->results as $ctest => $_){
             $this->compare($ctest);
         }
