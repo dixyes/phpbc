@@ -10,6 +10,7 @@ use PHPbc\Util;
 use PHPbc\Log;
 use PHPbc\Comparation;
 use PHPbc\Config;
+use PHPbc\Report;
 
 // make all warnings into exceptions
 Util::enable_error_handler();
@@ -64,10 +65,27 @@ foreach($ctrlTasks as $ctest => $ctask){
 // merge results
 $result = array_merge_recursive(...$cmps);
 
-// output
-file_put_contents($config->output, json_encode($result, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR));
-
-Log::i("output wrote to", $config->output);
+if("Windows" === PHP_OS_FAMILY){
+    $result["env"]=[
+        "wmic os get Caption,CSDVersion,OSArchitecture,OSLanguage,TotalVisibleMemorySize,Version /value" =>
+        `wmic os get Caption,CSDVersion,OSArchitecture,OSLanguage,TotalVisibleMemorySize,Version /value`,
+        "wmic cpu get Caption,Name,NumberOfCores,NumberOfLogicalProcessors,Architecture /value" =>
+        `wmic cpu get Caption,Name,NumberOfCores,NumberOfLogicalProcessors,Architecture /value`
+    ];
+}else{
+    $result["env"]=[
+        "uname -a" => `uname -a`
+    ];
+    if(is_file("/proc/cpuinfo")){
+        $result["env"]["cat /proc/cpuinfo"] = @file_get_contents("/proc/cpuinfo");
+    }
+    if(is_file("/proc/meminfo")){
+        $result["env"]["cat /proc/meminfo"] = @file_get_contents("/proc/meminfo");
+    }
+    if(is_file("/etc/os-release")){
+        $result["env"]["cat /etc/os-release"] = @file_get_contents("/etc/os-release");
+    }
+}
 
 // note about result
 $diffNum = count($result["diffs"]);
@@ -103,3 +121,18 @@ Log::i(sprintf("tested behavior change: %0.2f%% (%d changes/%d tested/%d skipped
     $diffNum,
     $realSameNum+$diffNum,
     $sameNum-$realSameNum));
+
+$result["summary"] = [
+    "overall_rate" => $diffNum/($sameNum+$diffNum),
+    "real_rate" => $diffNum/($realSameNum+$diffNum),
+    "all" => $sameNum+$diffNum,
+    "tested" => $realSameNum+$diffNum,
+    "same" => $sameNum
+];
+
+// output
+
+foreach($config->outputs as $output){
+    $report = new Report($result, $output);
+    $report->generate();
+}

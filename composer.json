@@ -12,5 +12,8 @@
     "autoload": {
         "psr-4": {"PHPbc\\": "src/"}
     },
+    "suggest": {
+        "erusev/parsedown": "^1.7.4"
+    },
     "require": {}
 }

@@ -12,7 +12,18 @@ class Config implements \ArrayAccess{
         "patches" => [],
         "timeout" => 30,
         "workers" => 4,
-        "output" => "phpbc_result.json",
+        "outputs" => [
+            [
+                "type" => "json",
+                "name" => "phpbc_result.json",
+                "pretty" => true,
+            ],
+            [
+                "type" => "markdown",
+                "name" => "phpbc_result.md",
+                "sames" => false,
+            ],
+        ],
     ];
     private array $_ctrl = [
         "binary" => PHP_BINARY,
@@ -29,7 +40,7 @@ class Config implements \ArrayAccess{
             // TODO: warning here
             return;
         }
-        $data = json_decode(file_get_contents($conffile));
+        $data = json_decode(file_get_contents($conffile), true);
         if(!$data){
             // TODO: warning here
             return;
@@ -41,7 +52,7 @@ class Config implements \ArrayAccess{
                 case "patches":
                 case "timeout":
                 case "workers":
-                case "output":
+                case "outputs":
                     $this->_common[$k] = $v;
                     break;
                 case "ctrl":
@@ -81,7 +92,7 @@ class Config implements \ArrayAccess{
             case "patches":
             case "timeout":
             case "workers":
-            case "output":
+            case "outputs":
                 return $this->_common[$k];
             case "ctrl":
             case "expr":
@@ -101,7 +112,7 @@ class Config implements \ArrayAccess{
             case "patches":
             case "timeout":
             case "workers":
-            case "output":
+            case "outputs":
             case "ctrl":
             case "expr":
                 return true;
