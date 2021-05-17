@@ -66,11 +66,12 @@ foreach($ctrlTasks as $ctest => $ctask){
 $result = array_merge_recursive(...$cmps);
 
 if("Windows" === PHP_OS_FAMILY){
+    $cp = (int)`wmic os get CodeSet`;
     $result["env"]=[
         "wmic os get Caption,CSDVersion,OSArchitecture,OSLanguage,TotalVisibleMemorySize,Version /value" =>
-        `wmic os get Caption,CSDVersion,OSArchitecture,OSLanguage,TotalVisibleMemorySize,Version /value`,
+        sapi_windows_cp_conv($cp, 65001, `wmic os get Caption,CSDVersion,OSArchitecture,OSLanguage,TotalVisibleMemorySize,Version /value`),
         "wmic cpu get Caption,Name,NumberOfCores,NumberOfLogicalProcessors,Architecture /value" =>
-        `wmic cpu get Caption,Name,NumberOfCores,NumberOfLogicalProcessors,Architecture /value`
+        sapi_windows_cp_conv($cp, 65001, `wmic cpu get Caption,Name,NumberOfCores,NumberOfLogicalProcessors,Architecture /value`),
     ];
 }else{
     $result["env"]=[
