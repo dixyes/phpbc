@@ -7,6 +7,7 @@ namespace PHPbc;
 class Report{
     const JSON = "json";
     const MARKDOWN = "markdown";
+    const HTML = "html";
     
     private string $type;
     private array $result;
@@ -20,6 +21,12 @@ class Report{
                     break;
                 case str_ends_with($lower, ".md"):
                     $type = self::MARKDOWN;
+                    break;
+                case str_ends_with($lower, ".html") || str_ends_with($lower, ".htm"):
+                    if(!class_exists("\\Parsedown", true)){
+                        throw new \RuntimeException("erusev/parsedown is not installed");
+                    }
+                    $type = self::HTML;
                     break;
                 default:
                     throw new \RuntimeException("cannot determine $outputSpec file type");
@@ -38,8 +45,11 @@ class Report{
         $this->result = $result; 
         $this->config = $config;
     }
-    public function generateStr():string {
-        switch($this->type){
+    public function generateStr(?string $type = NULL):string {
+        if(!$type){
+            $type = $this->type;
+        }
+        switch($type){
             case self::JSON:
                 $options = JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR;
                 if ($this->config["pretty"] ?? false){
@@ -98,6 +108,13 @@ class Report{
                     }
                 }
                 return $ret;
+            case self::HTML:
+                if(!class_exists("\\Parsedown", true)){
+                    throw new \RuntimeException("erusev/parsedown is not installed");
+                }
+                $parsedown = new \Parsedown();
+                $str = $this->generateStr(self::MARKDOWN);
+                return $parsedown->text($str);
             default:
                 throw new \RuntimeException("not supported type " . $this->type);
         }
