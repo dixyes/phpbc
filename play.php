@@ -65,18 +65,22 @@ foreach($ctrlTasks as $ctest => $ctask){
 // merge results
 $result = array_merge_recursive(...$cmps);
 
+$result["env"] = [];
+
+$result["env"]["control php -v"] = shell_exec(sprintf("%s %s -v", $config->ctrl["binary"], implode(" ", $config->ctrl["args"])));
+$result["env"]["control php -m"] = shell_exec(sprintf("%s %s -m", $config->ctrl["binary"], implode(" ", $config->ctrl["args"])));
+
+$result["env"]["experiment php -v"] = shell_exec(sprintf("%s %s -v", $config->expr["binary"], implode(" ", $config->expr["args"])));
+$result["env"]["experiment php -m"] = shell_exec(sprintf("%s %s -m", $config->expr["binary"], implode(" ", $config->expr["args"])));
+
 if("Windows" === PHP_OS_FAMILY){
     $cp = (int)`wmic os get CodeSet`;
-    $result["env"]=[
-        "wmic os get Caption,CSDVersion,OSArchitecture,OSLanguage,TotalVisibleMemorySize,Version /value" =>
-        sapi_windows_cp_conv($cp, 65001, `wmic os get Caption,CSDVersion,OSArchitecture,OSLanguage,TotalVisibleMemorySize,Version /value`),
-        "wmic cpu get Caption,Name,NumberOfCores,NumberOfLogicalProcessors,Architecture /value" =>
-        sapi_windows_cp_conv($cp, 65001, `wmic cpu get Caption,Name,NumberOfCores,NumberOfLogicalProcessors,Architecture /value`),
-    ];
+    $result["env"]["wmic os get Caption,CSDVersion,OSArchitecture,OSLanguage,TotalVisibleMemorySize,Version /value"] =
+        sapi_windows_cp_conv($cp, 65001, `wmic os get Caption,CSDVersion,OSArchitecture,OSLanguage,TotalVisibleMemorySize,Version /value`);
+    $result["env"]["wmic cpu get Caption,Name,NumberOfCores,NumberOfLogicalProcessors,Architecture /value"] =
+        sapi_windows_cp_conv($cp, 65001, `wmic cpu get Caption,Name,NumberOfCores,NumberOfLogicalProcessors,Architecture /value`);
 }else{
-    $result["env"]=[
-        "uname -a" => `uname -a`
-    ];
+    $result["env"]["uname -a"] = `uname -a`;
     if(is_file("/proc/cpuinfo")){
         $result["env"]["cat /proc/cpuinfo"] = @file_get_contents("/proc/cpuinfo");
     }
