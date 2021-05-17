@@ -13,7 +13,9 @@
         "psr-4": {"PHPbc\\": "src/"}
     },
     "suggest": {
-        "erusev/parsedown": "^1.7.4"
+        "erusev/parsedown": ">=1.7.4"
     },
-    "require": {}
+    "require": {
+        "php": ">=8.0"
+    }
 }
