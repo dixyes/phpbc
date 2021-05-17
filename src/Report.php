@@ -75,12 +75,12 @@ class Report{
                 $ret .= "\n| Tests have exactly same result | Tests ran | All tests found | Overall bc rate | Real bc rate |";
                 $ret .= "\n| - | - | - | - | - |";
                 $ret .= sprintf(
-                    "\n| %d | %d | %d | %0.2f | %0.2f |",
+                    "\n| %d | %d | %d | %0.4f%% | %0.4f%% |",
                     $this->result["summary"]["same"],
                     $this->result["summary"]["tested"],
                     $this->result["summary"]["all"],
-                    $this->result["summary"]["overall_rate"],
-                    $this->result["summary"]["real_rate"],
+                    $this->result["summary"]["overall_rate"]*100,
+                    $this->result["summary"]["real_rate"]*100,
                 );
                 $ret .= "\n";
                 // diff parts
@@ -89,9 +89,9 @@ class Report{
                     $ret .= "\n### $test\n\n";
                     $results = preg_split("|:|", $diff["type"]);
                     if(count($results)<2){
-                        $ret .= "Tests " . $diff["type"] . " in both, but outputs is different.\n\n";
+                        $ret .= "Test " . $diff["type"] . " in both, but outputs is different.\n\n";
                     }else{
-                        $ret .= sprintf("Tests %s in control but %s in experiment\n\n", $results[0], $results[1]);
+                        $ret .= sprintf("Test %s in control but %s in experiment\n\n", $results[0], $results[1]);
                     }
                     $ret .= "```patch\n" . $diff["diff"] . "\n```\n";
                 }
