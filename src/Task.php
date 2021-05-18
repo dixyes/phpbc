@@ -80,6 +80,9 @@ class Task {
         $results = [];
         foreach($lines as $line){
             $vk = preg_split('/\s+/', $line);
+            if(count($vk)<2){
+                continue;
+            }
             $results[$vk[1]] = $vk[0];
         }
         $this->results = $results;
