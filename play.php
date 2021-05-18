@@ -22,6 +22,11 @@ $config = Config::init();
 Log::i("start walk all tests");
 $tests = Util::walk_tests($config->ctrl["workdir"], filter: $config->tests, skip: $config->skip);
 
+if(count($tests) < 1){
+    Log::w("no tests found, exiting");
+    exit();
+}
+
 // create task manager
 $manager = new TaskManager($config->workers);
 
@@ -117,23 +122,35 @@ foreach($result["sames"] as $k => $v){
     }
 };
 
-Log::i(sprintf("overall (including tests that were skipped) behavior change: %0.2f%% (%d changes/%d tests)",
-    ($diffNum/($sameNum+$diffNum))*100,
-    $diffNum,
-    $sameNum+$diffNum));
-Log::i(sprintf("tested behavior change: %0.2f%% (%d changes/%d tested/%d skipped)",
-    ($diffNum/($realSameNum+$diffNum))*100,
-    $diffNum,
-    $realSameNum+$diffNum,
-    $sameNum-$realSameNum));
 
-$result["summary"] = [
-    "overall_rate" => $diffNum/($sameNum+$diffNum),
-    "real_rate" => $diffNum/($realSameNum+$diffNum),
-    "all" => $sameNum+$diffNum,
-    "tested" => $realSameNum+$diffNum,
-    "same" => $sameNum
-];
+if($realSameNum === 0 && $diffNum === 0){
+    // all tests skipped
+    Log::i("tested behavior change: 0 (all tests skipped)");
+    $result["summary"] = [
+        "overall_rate" => 0,
+        "real_rate" => 0,
+        "all" => $sameNum+$diffNum,
+        "tested" => 0,
+        "same" => 0
+    ];
+}else{
+    Log::i(sprintf("overall (including tests that were skipped) behavior change: %0.2f%% (%d changes/%d tests)",
+        ($diffNum/($sameNum+$diffNum))*100,
+        $diffNum,
+        $sameNum+$diffNum));
+    Log::i(sprintf("tested behavior change: %0.2f%% (%d changes/%d tested/%d skipped)",
+        ($diffNum/($realSameNum+$diffNum))*100,
+        $diffNum,
+        $realSameNum+$diffNum,
+        $sameNum-$realSameNum));
+    $result["summary"] = [
+        "overall_rate" => $diffNum/($sameNum+$diffNum),
+        "real_rate" => $diffNum/($realSameNum+$diffNum),
+        "all" => $sameNum+$diffNum,
+        "tested" => $realSameNum+$diffNum,
+        "same" => $sameNum
+    ];
+}
 
 // output
 
