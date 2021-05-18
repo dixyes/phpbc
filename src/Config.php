@@ -35,16 +35,7 @@ class Config implements \ArrayAccess{
         "args" => [],
         "workdir" => "php-src-expr",
     ];
-    private function __construct(string $conffile){
-        if(!file_exists($conffile)){
-            // TODO: warning here
-            return;
-        }
-        $data = json_decode(file_get_contents($conffile), true);
-        if(!$data){
-            // TODO: warning here
-            return;
-        }
+    private function __construct(array $data){
         foreach($data as $k => $v){
             switch($k){
                 case "tests":
@@ -78,11 +69,29 @@ class Config implements \ArrayAccess{
         }
 
     }
-    static public function init(string $conffile=__DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR ."config.json"): Config{
-        if(self::$config && $conffile){
-            throw new \LogicException("config have already been initialized");
+    static public function init(mixed $path_or_data=NULL): Config{
+        if(is_array($path_or_data)){
+            return self::$config ?? new static($path_or_data);
+        }else if(!$path_or_data || is_string($path_or_data)){
+            if(self::$config && !$path_or_data){
+                throw new \LogicException("config have already been initialized");
+            }
+            $conffile=$path_or_data;
+            if(!$conffile){
+                $conffile=__DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR ."config.json";
+            }
+            if(!file_exists($conffile)){
+                // TODO: warning here
+                return self::$config ?? new static([]);
+            }
+            $data = json_decode(file_get_contents($conffile), true);
+            if(!$data){
+                // TODO: warning here
+                return self::$config ?? new static([]);
+            }
+            return self::$config ?? new static($data);
         }
-        return self::$config ?? new static($conffile);
+        throw new \LogicException("bad path or data");
     }
 
     public function __get($k) {
