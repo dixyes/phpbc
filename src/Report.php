@@ -93,7 +93,9 @@ class Report{
                     }else{
                         $ret .= sprintf("Test %s in control but %s in experiment\n\n", $results[0], $results[1]);
                     }
-                    $ret .= "```patch\n" . $diff["diff"] . "\n```\n";
+                    if(isset($diff["diff"])){
+                        $ret .= "```patch\n" . $diff["diff"] . "\n```\n";
+                    }
                 }
                 // same parts
                 if($this->config["sames"] ?? false){
