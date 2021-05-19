@@ -1,0 +1,90 @@
+name: 'phpbc actions'
+description: 'check php behavior changes'
+inputs:
+  ctrl_binary:
+    description: 'control php binary'
+    required: false
+    default: ''
+  ctrl_args:
+    description: 'control php arguments'
+    required: false
+    default: ''
+  ctrl_workdir:
+    description: 'control php test workdir'
+    required: false
+    default: ''
+  expr_binary:
+    description: 'experiment php binary'
+    required: true
+    default: ''
+  expr_args:
+    description: 'experiment php arguments'
+    required: false
+    default: ''
+  expr_workdir:
+    description: 'experiment php test workdir'
+    required: false
+    default: ''
+  skip:
+    description: 'skip tests, supports regex, comma splited'
+    required: false
+    default: ''
+  comment:
+    description: 'send a comment to original commit, 1 for enable'
+    required: false
+    default: '0'
+runs:
+  using: 'composite'
+  steps:
+    - name: Prepare php and composer
+      shell: bash
+      working-directory: ${{github.action_path}}/..
+      run: |
+        composer=composer
+        if php -r "if(PHP_MAJOR_VERSION >= 8){exit(1);}"
+        then
+          if [ ! -f php/php ] || [ ! -f php/composer.phar ]
+          then
+            # php in PATH is not php8, we prepare it
+            echo "::group::Prepare PHP8 for running phpbc"
+            php action/phpinstaller.php
+            echo "::endgroup::"
+          fi
+          composer="./php/php php/composer.phar"
+        else
+          mkdir -p php
+          printf '#!/bin/sh\nexec php $*\n' > php/php
+          chmod 0755 php/php
+        fi
+
+        echo "::group::composer install"
+        $composer install
+        echo "::endgroup::"
+    - name: Run phpbc
+      shell: php {0}
+      working-directory: ${{github.action_path}}
+      run: |
+        <?php
+        echo "::group::Prepare context". PHP_EOL;
+        $r = fopen(__FILE__, "r");
+        fseek($r, __COMPILER_HALT_OFFSET__);
+        $red = "";
+        while(!feof($r)){
+          $red .= fread($r, 4096);
+        }
+        fclose($r);
+        file_put_contents("content.json", $red);
+        echo "::endgroup::". PHP_EOL;
+        echo "::group::Run PHPbc". PHP_EOL;
+        passthru('bash -c "../php/php action.php content.json"');
+        echo "::endgroup::". PHP_EOL;
+        
+        __halt_compiler(); 
+        {
+          "inputs": ${{toJSON(inputs)}},
+          "github": ${{toJSON(github)}},
+          "env": ${{toJSON(env)}},
+          "steps": ${{toJSON(steps)}},
+          "runner": ${{toJSON(runner)}},
+          "matrix": ${{toJSON(matrix)}}
+        }
