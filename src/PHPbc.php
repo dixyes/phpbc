@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace PHPbc;
 
 class PHPbc{
-    static public function run(){
+    static public function run(?string $conffile=NULL){
         // initialize config
-        $config = Config::init();
+        $config = Config::init($conffile);
 
         // find out all tests
         Log::i("start walk all tests");
