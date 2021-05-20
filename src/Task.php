@@ -15,7 +15,7 @@ class Task {
     private /* resource */ $list;
     private /* resource */ $stdout;
     private /* resource */ $stderr;
-    private string $resultName;
+    private /* resource */ $resultFile;
 
     public string $testName;
     public string $workdir;
@@ -34,7 +34,7 @@ class Task {
         $this->tests = $tests;
         $this->testBinary = $testBinary;
         $this->testArgs = $testArgs;
-        $this->resultName = Util::path_join(sys_get_temp_dir(), "result" . spl_object_hash($this) . ".txt");
+        //$this->resultName = Util::path_join(sys_get_temp_dir(), "result" . spl_object_hash($this) . ".txt");
         $this->workDir = $workDir;
         $this->testName = $testName;
     }
@@ -44,6 +44,7 @@ class Task {
     private const WAIT_TICK = 100000;
     public function start(){
         // prepare tests lists
+        $this->resultFile = tmpfile();
         $this->list = tmpfile();
         $this->stdout = tmpfile();
         $this->stderr = tmpfile();
@@ -51,7 +52,6 @@ class Task {
         $listName = stream_get_meta_data($this->list)['uri'];
         $stdoutName = stream_get_meta_data($this->stdout)['uri'];
         $stderrName = stream_get_meta_data($this->stderr)['uri'];
-        @unlink($this->resultName);
         
         // create process
         $cmd = PHP_BINARY . " -n run-tests.php -p " . $this->testBinary .
@@ -59,8 +59,8 @@ class Task {
             " " . implode(" ", $this->testArgs) .
             sprintf(" --set-timeout %d", (Config::init())->timeout).
             " -r " . $listName .
-            " -W " . $this->resultName;
-        //printf("create process with %s\n", $cmd);
+            " -W " . stream_get_meta_data($this->resultFile)['uri'];
+        //Log::d("create process with [", $cmd); 
         $this->process = proc_open(
             $cmd,
             [
@@ -75,7 +75,8 @@ class Task {
     }
     private function end(){
         //printf("ending\n");
-        $resultText = trim(file_get_contents($this->resultName));
+        $resultName = stream_get_meta_data($this->resultFile)['uri'];
+        $resultText = trim(file_get_contents($resultName));
         $lines = preg_split('/[\r\n]+/', $resultText);
         $results = [];
         foreach($lines as $line){
@@ -87,8 +88,7 @@ class Task {
         }
         $this->results = $results;
         //var_dump($results);
-        unlink($this->resultName);
-        unset($this->resultName);
+        unset($this->resultFile);
         fclose($this->list);
         unset($this->list);
         fclose($this->stdout);
