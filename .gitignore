@@ -143,3 +143,5 @@ config.json
 composer.phar
 composer.lock
 /vendor/
+
+php/
