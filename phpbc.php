@@ -9,4 +9,4 @@ use PHPbc\Util;
 
 // make all warnings into exceptions
 Util::enable_error_handler();
-PHPbc::run("config.php");
+PHPbc::run($argv[1]);
