@@ -54,13 +54,17 @@ class Task {
         $stderrName = stream_get_meta_data($this->stderr)['uri'];
         
         // create process
-        $cmd = PHP_BINARY . " -n run-tests.php -p " . $this->testBinary .
+        $cmd = $this->testBinary . " -n run-tests.php -p " . $this->testBinary .
             " " . implode(" ", self::COMMON_ARGS) .
             " " . implode(" ", $this->testArgs) .
             sprintf(" --set-timeout %d", (Config::init())->timeout).
             " -r " . $listName .
             " -W " . stream_get_meta_data($this->resultFile)['uri'];
         //Log::d("create process with [", $cmd); 
+        $env = getenv();
+        $env["TEST_PHP_EXECUTABLE"] = $this->testBinary;
+        $env["NO_COLOR"] = "yes";
+        var_dump($env);
         $this->process = proc_open(
             $cmd,
             [
@@ -69,7 +73,8 @@ class Task {
                 2 => ["file", $stderrName, "w"],
             ],
             $this->pipes,
-            $this->workDir
+            $this->workDir,
+            $env
         );
         return;
     }
