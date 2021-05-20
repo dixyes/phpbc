@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace PHPbc;
 
 class Log{
-    static private ?Log $logger = NULL;
+    static private /* ?Log */ $logger = NULL;
 
     //private Config $config;
     private $ffi;
     private $stdoutHandle;
     private $stderrHandle;
     private $csbi;
-    private int $stdoutAttr;
-    private int $stderrAttr;
+    private /* int */ $stdoutAttr;
+    private /* int */ $stderrAttr;
     const INTENSITY = 0x8;
     const RED = 0x4;
     const GREEN = 0x2;
@@ -196,19 +196,19 @@ class Log{
 
     }
     private function _d(...$args){
-        $this->log(color: self::RED|self::BLUE, fd: 1, tag: "[DBG]", things: $args);
+        $this->log(self::RED|self::BLUE, 1, "[DBG]", $args);
     }
     private function _v(...$args){
-        $this->log(color: self::RED|self::BLUE|self::GREEN, fd: 1, tag: "[VER]", things: $args);
+        $this->log(self::RED|self::BLUE|self::GREEN, 1, "[VER]", $args);
     }
     private function _i(...$args){
-        $this->log(color: self::RED|self::BLUE|self::GREEN|self::INTENSITY, fd: 1, tag: "[IFO]", things: $args);
+        $this->log(self::RED|self::BLUE|self::GREEN|self::INTENSITY, 1, "[IFO]", $args);
     }
     private function _w(...$args){
-        $this->log(color: self::RED|self::BLUE, fd: 2, tag: "[WRN]", things: $args);
+        $this->log(self::RED|self::BLUE, 2, "[WRN]", $args);
     }
     private function _e(...$args){
-        $this->log(color: self::RED, fd: 2, tag: "[ERR]", things: $args);
+        $this->log(self::RED, 2, "[ERR]", $args);
     }
 
     
