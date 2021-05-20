@@ -70,26 +70,30 @@ class Config implements \ArrayAccess{
 
     }
     static public function init(mixed $path_or_data=NULL): Config{
+        if(self::$config){
+            return self::$config;
+        }
         if(is_array($path_or_data)){
-            return self::$config ?? new static($path_or_data);
-        }else if(!$path_or_data || is_string($path_or_data)){
-            if(self::$config && !$path_or_data){
-                throw new \LogicException("config have already been initialized");
-            }
+            self::$config = new static($path_or_data);
+            return self::$config;
+        }else if(is_string($path_or_data)){
             $conffile=$path_or_data;
             if(!$conffile){
                 $conffile=__DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR ."config.json";
             }
             if(!file_exists($conffile)){
                 // TODO: warning here
-                return self::$config ?? new static([]);
+                self::$config = new static([]);
+                return self::$config;
             }
             $data = json_decode(file_get_contents($conffile), true);
             if(!$data){
                 // TODO: warning here
-                return self::$config ?? new static([]);
+                self::$config = new static([]);
+                return self::$config;
             }
-            return self::$config ?? new static($data);
+            self::$config = new static($data);
+            return self::$config;
         }
         throw new \LogicException("bad path or data");
     }
