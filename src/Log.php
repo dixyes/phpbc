@@ -7,7 +7,7 @@ namespace PHPbc;
 class Log{
     static private ?Log $logger = NULL;
 
-    private Config $config;
+    //private Config $config;
     private $ffi;
     private $stdoutHandle;
     private $stderrHandle;
@@ -19,7 +19,7 @@ class Log{
     const GREEN = 0x2;
     const BLUE = 0x1;
     private function __construct(){
-        $this->config = Config::init();
+        //$this->config = Config::init();
         $this->ffi = NULL;
         if("Windows" == PHP_OS_FAMILY && extension_loaded("FFI")){
             $this->ffi = \FFI::cdef("
