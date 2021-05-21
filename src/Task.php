@@ -63,7 +63,7 @@ class Task {
         $env = getenv();
         $env["TEST_PHP_EXECUTABLE"] = $this->testBinary;
         $env["NO_COLOR"] = "yes";
-        var_dump($env);
+        //var_dump($env);
         $this->process = proc_open(
             $cmd,
             [
@@ -95,10 +95,10 @@ class Task {
         unset($this->resultFile);
         fclose($this->list);
         unset($this->list);
-        $stdoutName = stream_get_meta_data($this->stdout)['uri'];
-        $stderrName = stream_get_meta_data($this->stderr)['uri'];
-        var_dump(file_get_contents($stdoutName));
-        var_dump(file_get_contents($stderrName));
+        //$stdoutName = stream_get_meta_data($this->stdout)['uri'];
+        //$stderrName = stream_get_meta_data($this->stderr)['uri'];
+        //var_dump(file_get_contents($stdoutName));
+        //var_dump(file_get_contents($stderrName));
         fclose($this->stdout);
         unset($this->stdout);
         fclose($this->stderr);
