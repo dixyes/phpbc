@@ -51,12 +51,21 @@ $expr_binary = $inputs["expr_binary"] ?: $phpbin;
 
 $skipStr = trim($inputs["skip"]);
 $skip = [];
+
+$ver = trim(shell_exec($ctrl_binary . ' -r "printf(\'%d.%d.%d\', PHP_MAJOR_VERSION,PHP_MINOR_VERSION,PHP_RELEASE_VERSION);"'));
+//$shortVer = trim(shell_exec($ctrl_binary . ' -r "printf("%d.%d", PHP_MAJOR_VERSION,PHP_MINOR_VERSION)"'));
+if(version_compare($ver, "7.4.0", "<")){
+    // phpbdg tests stucks on php 7.3
+    Log::i("skipping phpdbg tests");
+    $skip[] = "sapi/phpdbg.*";
+}
 if("Windows" == PHP_OS_FAMILY){
     // see https://bugs.php.net/bug.php?id=80905
+    Log::i("skipping opcache jit tests");
     $skip[] = "ext/opcache/tests/jit.*";
 }
 if($skipStr){
-    $skip = array_merge($skip, preg_split("|,|", $skipStr));
+    $skip = array_filter(array_merge($skip, preg_split("|,|", $skipStr)));
 }
 
 // generate config
@@ -85,14 +94,11 @@ $configData = [
         ]
     ]
 ];
-if(count($skip) > 1){
+if(count($skip) > 0){
     $configData["skip"] = $skip;
 }
 
 $config = Config::init($configData);
-
-$ver = trim(shell_exec($ctrl_binary . ' -r "printf(\'%d.%d.%d\', PHP_MAJOR_VERSION,PHP_MINOR_VERSION,PHP_RELEASE_VERSION);"'));
-//$shortVer = trim(shell_exec($ctrl_binary . ' -r "printf("%d.%d", PHP_MAJOR_VERSION,PHP_MINOR_VERSION)"'));
 
 if($needsClone){
     Log::i("cloning php sources");
