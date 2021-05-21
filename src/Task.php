@@ -22,7 +22,6 @@ class Task {
     public array $results;
 
     private const COMMON_ARGS = [
-        "--no-color",
         "-q"
     ];
 
