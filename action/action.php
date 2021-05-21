@@ -9,8 +9,6 @@ use PHPbc\Util;
 use PHPbc\Config;
 use PHPbc\Log;
 
-echo "::group::Start phpbc" . PHP_EOL;
-
 // make all warnings into exceptions
 Util::enable_error_handler();
 
@@ -129,5 +127,3 @@ Log::i(file_get_contents("phpbc_results.md"));
 if((int)$context["inputs"]["comment"] == 1){
     Log::i("comment about this commit");
 }
-
-echo "::endgroup::" . PHP_EOL;
