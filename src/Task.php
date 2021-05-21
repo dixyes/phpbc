@@ -63,6 +63,8 @@ class Task {
         $env = getenv();
         $env["TEST_PHP_EXECUTABLE"] = $this->testBinary;
         $env["NO_COLOR"] = "yes";
+        $env["NO_INTERACTION"] = "1";
+        $env["TRAVIS_CI"] = "1";
         //var_dump($env);
         $this->process = proc_open(
             $cmd,
