@@ -103,6 +103,10 @@ $config = Config::init($configData);
 if($needsClone){
     Log::i("cloning php sources");
     passthru("git clone --bare --single-branch --depth 1 --branch php-${ver} https://github.com/php/php-src ${ctrl_workdir}.git");
+    if("Windows" === PHP_OS_FAMILY){
+        Log::i("disable autocrlf for windows");
+        passthru("git --git-dir=${ctrl_workdir}.git config core.autocrlf false");
+    }
     Log::i("checking out php sources for control");
     mkdir($ctrl_workdir);
     passthru("git --git-dir=${ctrl_workdir}.git --work-tree=${ctrl_workdir} reset --hard php-${ver}");
