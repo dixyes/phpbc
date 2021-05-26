@@ -63,6 +63,11 @@ if("Windows" == PHP_OS_FAMILY){
     // see https://bugs.php.net/bug.php?id=80905
     Log::i("skipping opcache jit tests");
     $skip[] = "ext/opcache/tests/jit.*";
+    if(version_compare($ver, "7.4.0", "<")){
+        // openssl tests stucks on windows php 7.3
+        Log::i("skipping openssl tests");
+        $skip[] = "ext/openssl.*";
+    }
 }
 if($skipStr){
     $skip = array_filter(array_merge($skip, preg_split("|,|", $skipStr)));
