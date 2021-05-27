@@ -88,6 +88,10 @@ class Report{
                 foreach($this->result["diffs"] as $test => $diff){
                     $ret .= "\n### $test\n\n";
                     $results = preg_split("|:|", $diff["type"]);
+                    if(isset($diff["reason"])){
+                        $ret .= sprintf("Test %s in experiment beacuse\n\n", isset($results[1]) ? $results[1] : $diff["type"]);
+                        $ret .= "```patch\n" . $diff["reason"] . "\n```\n\n";
+                    }
                     if(count($results)<2){
                         $ret .= "Test " . $diff["type"] . " in both, but outputs is different.\n\n";
                     }else{

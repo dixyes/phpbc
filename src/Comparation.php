@@ -27,6 +27,7 @@ class Comparation{
         $eresult = $this->expr->results[$test];
         $type = NULL;
         $diff = NULL;
+        $reason = NULL;
         $outName = preg_replace("|\\.phpt$|", ".out", $test);
         $coutName = Util::path_join($this->ctrl->workDir, $outName);
         $eoutName = Util::path_join($this->expr->workDir, $outName);
@@ -38,13 +39,22 @@ class Comparation{
                 // compare outputs when both failed
                 
                 if(is_file($coutName) || is_file($eoutName)){
-                    // at least one sied outputs is present
+                    // at least one side outputs is present
                     $cout = is_file($coutName) ? file_get_contents($coutName) : "Control outputs is not present";
                     $eout = is_file($eoutName) ? file_get_contents($eoutName) : "Experiment outputs is not present";
                     $eout = str_replace($this->expr->workDir, $this->ctrl->workDir, $eout);
                     //printf("compare %s with %s\n", $cout, $eout);
                     $diff = Util::generate_diff($cout, NULL, $eout);
                     //printf("result %s\n", $diff);
+                    // read failed reason
+                    $diffName = preg_replace("|\\.phpt$|", ".diff", $test);
+                    $ediffName = Util::path_join($this->expr->workDir, $diffName);
+                    if(is_file($ediffName)){
+                        $reason = file_get_contents($ediffName);
+                        if(strlen($reason) > 4096){
+                            $reason = implode("\n", [str_split($reason, 4096)[0], "..."]);
+                        }
+                    }
                 }
             }
         }else{
@@ -64,6 +74,9 @@ class Comparation{
                 "type" => $type,
                 "diff" => $diff,
             ];
+            if($reason){
+                $this->diffs[$testName]["reason"] = $reason;
+            }
         }else{
             if(!isset($this->sames[$type])){
                 $this->sames[$type] = [];
