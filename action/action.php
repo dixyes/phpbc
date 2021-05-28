@@ -50,7 +50,11 @@ $ctrl_binary = $inputs["ctrl_binary"] ?: $phpbin;
 $expr_binary = $inputs["expr_binary"] ?: $phpbin;
 
 $skipStr = trim($inputs["skip"]);
-$skip = [];
+$skip = [
+    // these tests may leak private info
+    "ext/standard/tests/general_functions/phpinfo.phpt",
+    "ext/openssl/tests/check_default_conf_path.phpt"
+];
 
 $ver = trim(shell_exec($ctrl_binary . ' -r "printf(\'%d.%d.%d\', PHP_MAJOR_VERSION,PHP_MINOR_VERSION,PHP_RELEASE_VERSION);"'));
 //$shortVer = trim(shell_exec($ctrl_binary . ' -r "printf("%d.%d", PHP_MAJOR_VERSION,PHP_MINOR_VERSION)"'));
