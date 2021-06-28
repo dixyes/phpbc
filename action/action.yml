@@ -37,6 +37,14 @@ inputs:
     description: 'send a comment to original commit, 1 for enable'
     required: false
     default: '0'
+  ctrl_env:
+    description: 'control php test environment varibles, comma splited'
+    required: false
+    default: ''
+  expr_env:
+    description: 'experiment php test environment varibles, comma splited'
+    required: true
+    default: ''
 runs:
   using: 'composite'
   steps:

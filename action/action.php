@@ -77,18 +77,36 @@ if($skipStr){
     $skip = array_filter(array_merge($skip, preg_split("|,|", $skipStr)));
 }
 
+// prepare envs
+function gen_env($inputName): array{
+    global $inputs;
+    $ret = [];
+    foreach(explode(",", $inputs[$inputName]) as $e){
+        $kv = explode("=", $e, 2);
+        if(!$kv[1]){
+            $v=null;
+        }else{
+            $v=$kv[1];
+        }
+        $ret[$kv[0]] = $v;
+    }
+    return $ret;
+}
+
 // generate config
 $configData = [
     "tests" => array_filter(array_map('trim', explode(',', $inputs["tests"]))),
     "ctrl" => [
         "binary" => $ctrl_binary,
         "workdir" => $ctrl_workdir,
-        "args" => [$inputs["ctrl_args"]]
+        "args" => [$inputs["ctrl_args"]],
+        "env" => gen_env("ctrl_env"),
     ],
     "expr" => [
         "binary"=>$expr_binary,
         "workdir"=>$expr_workdir,
-        "args"=>[$inputs["expr_args"]]
+        "args"=>[$inputs["expr_args"]],
+        "env" => gen_env("expr_env"),
     ],
     "outputs" => [
         [
