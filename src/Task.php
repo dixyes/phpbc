@@ -76,7 +76,9 @@ class Task {
             [
                 0 => ["pipe", "r"],
                 1 => ["file", $stdoutName, "w"],
+                //1 => STDOUT,
                 2 => ["file", $stderrName, "w"],
+                //2 => STDERR,
             ],
             $this->pipes,
             $this->workDir,

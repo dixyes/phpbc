@@ -11,13 +11,115 @@ jobs:
       matrix:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
         phpver: ["7.3", "7.4", "8.0"]
+    env:
+      MYSQL_WORKDIR: ${{ 'windows-latest' == matrix.os && 'C:/mysql' || '/tmp/mysql'}}
     steps:
       - name: Setup PHP
         uses: shivammathur/setup-php@master
         with:
           php-version: ${{ matrix.phpver }}
           coverage: none
+          extensions: mysqli,pdo_mysql
+      - name: Prepare mysql
+        shell: bash
+        run: |
+          ${{ 'macOS' == runner.os && 'brew install mysql' || ''}}
+          echo " ::group::Generate config file"
+          mkdir -p ${MYSQL_WORKDIR}/ctrl/data
+          cat > ${MYSQL_WORKDIR}/ctrl/my.cnf <<EOF
+          [mysqld]
+          ${{ 'Windows' != runner.os && 'mysqlx=0' || '' }}
+          pid_file=${MYSQL_WORKDIR}/ctrl/mysqld.pid
+          socket=${MYSQL_WORKDIR}/ctrl/mysqld.sock
+          datadir=${MYSQL_WORKDIR}/ctrl/data
+          bind-address=127.0.0.1
+          port=3406
+          symbolic-links=0
+          server-id=1
+          log_bin=somebinlog
+          binlog_checksum=NONE
+          binlog_format=ROW
+          ${{ matrix.phpver == '7.3' && 'default_authentication_plugin=mysql_native_password' || ''}}
+          EOF
+          mkdir -p ${MYSQL_WORKDIR}/expr/data
+          cat > ${MYSQL_WORKDIR}/expr/my.cnf <<EOF
+          [mysqld]
+          ${{ 'Windows' != runner.os && 'mysqlx=0' || '' }}
+          pid_file=${MYSQL_WORKDIR}/expr/mysqld.pid
+          socket=${MYSQL_WORKDIR}/expr/mysqld.sock
+          datadir=${MYSQL_WORKDIR}/expr/data
+          bind-address=127.0.0.1
+          port=3506
+          symbolic-links=0
+          server-id=1
+          log_bin=somebinlog
+          binlog_checksum=NONE
+          binlog_format=ROW
+          ${{ matrix.phpver == '7.3' && 'default_authentication_plugin=mysql_native_password' || ''}}
+          EOF
+      - name: Run mysql server (unix)
+        if: runner.os != 'Windows'
+        run: |
+          echo "::group::Initialize database"
+          mysqld "--defaults-file=${{env.MYSQL_WORKDIR}}/ctrl/my.cnf" --initialize-insecure
+          mysqld "--defaults-file=${{env.MYSQL_WORKDIR}}/expr/my.cnf" --initialize-insecure
+          echo "::group::Start daemon"
+          mysqld "--defaults-file=${{env.MYSQL_WORKDIR}}/ctrl/my.cnf" --daemonize --log_error=error.log || echo Failed start daemon >&2
+          cat ${{env.MYSQL_WORKDIR}}/ctrl/data/error.log
+          mysqld "--defaults-file=${{env.MYSQL_WORKDIR}}/expr/my.cnf" --daemonize --log_error=error.log || echo Failed start daemon >&2
+          cat ${{env.MYSQL_WORKDIR}}/expr/data/error.log
+          echo "::group::Create test database"
+          mysql --host=127.0.0.1 --port=3406 -u root -e "CREATE DATABASE test;"
+          mysql --host=127.0.0.1 --port=3506 -u root -e "CREATE DATABASE test;"
+      - name: Run mysql server (win)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Write-Host "::group::Initialize database"
+          & mysqld "--defaults-file=${{env.MYSQL_WORKDIR}}/ctrl/my.cnf" --initialize-insecure --console
+          & mysqld "--defaults-file=${{env.MYSQL_WORKDIR}}/expr/my.cnf" --initialize-insecure --console
+          Write-Host "::group::Start daemon"
+          Start-Process "mysqld.exe" -ArgumentList "--defaults-file=${{env.MYSQL_WORKDIR}}/ctrl/my.cnf --log_error=error.log"
+          Start-Process "mysqld.exe" -ArgumentList "--defaults-file=${{env.MYSQL_WORKDIR}}/expr/my.cnf --log_error=error.log"
+          Write-Host "::group::Create test database"
+          $done = $false
+          for($i=0; $i -Lt 5; $i++){
+            Write-Host "Waiting for ctrl mysql start"
+            try{
+              & mysql --host=127.0.0.1 --port=3406 -u root -e "CREATE DATABASE test;" 2>&1
+              $done = $true
+              break
+            }catch{
+              Write-Host $_
+              continue
+            }finally{
+              Start-Sleep -Seconds 2
+            }
+          }
+          if(-Not $done){
+            exit 1
+          }
+          $done = $false
+          for($i=0; $i -Lt 5; $i++){
+            Write-Host "Waiting for expr mysql start"
+            try{
+              & mysql --host=127.0.0.1 --port=3506 -u root -e "CREATE DATABASE test;" 2>&1
+              $done = $true
+              break
+            }catch{
+              Write-Host $_
+              continue
+            }finally{
+              Start-Sleep -Seconds 2
+            }
+          }
+          if(-Not $done){
+            exit 1
+          }
       - name: Checkout
         uses: actions/checkout@v2
       - name: Test use actions
         uses: ./action
+        with:
+          ctrl_env: MYSQL_TEST_HOST=localhost:3406,MYSQL_TEST_PORT=3406,PDO_MYSQL_TEST_DSN=mysql:host=127.0.0.1;port=3406;dbname=test,PDO_MYSQL_TEST_USER=root
+          expr_env: MYSQL_TEST_HOST=localhost:3506,MYSQL_TEST_PORT=3506,PDO_MYSQL_TEST_DSN=mysql:host=127.0.0.1;port=3506;dbname=test,PDO_MYSQL_TEST_USER=root
