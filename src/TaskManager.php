@@ -6,7 +6,7 @@ namespace PHPbc;
 
 class TaskManager {
     private \SplQueue $queue;
-    private array $runnning;
+    private array $running;
     private int $runners;
     public function __construct(int $runners = 4){
         $this->queue = new \SplQueue();
