@@ -29,11 +29,13 @@ class Config implements \ArrayAccess{
         "binary" => PHP_BINARY,
         "args" => [],
         "workdir" => "php-src",
+        "env" => [],
     ];
     private array $_expr = [
         "binary" => PHP_BINARY,
         "args" => [],
         "workdir" => "php-src-expr",
+        "env" => [],
     ];
     private function __construct(array $data){
         foreach($data as $k => $v){
@@ -54,6 +56,7 @@ class Config implements \ArrayAccess{
                             case "binary":
                             case "args":
                             case "workdir":
+                            case "env":
                                 $this->$_k[$kk] = $vv;
                                 break;
                             default:

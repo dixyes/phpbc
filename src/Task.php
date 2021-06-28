@@ -11,6 +11,9 @@ namespace PHPbc;
 class Task {
     // tests will be executed in this task
     private array $tests;
+    private string $testBinary;
+    private array $testArgs;
+    private array $testEnv;
     // list file
     private /* resource */ $list;
     private /* resource */ $stdout;
@@ -18,14 +21,14 @@ class Task {
     private /* resource */ $resultFile;
 
     public string $testName;
-    public string $workdir;
+    public string $workDir;
     public array $results;
 
     private const COMMON_ARGS = [
         "-q"
     ];
 
-    public function __construct(array $tests, string $workDir = ".", string $testBinary = PHP_BINARY, array $testArgs = [], $testName = ""){
+    public function __construct(array $tests, string $workDir = ".", string $testBinary = PHP_BINARY, array $testArgs = [], $testName = "", array $testEnv = []){
         if(count($tests) < 1){
             // bad args
             throw new TaskException("bad tests set");
@@ -36,6 +39,7 @@ class Task {
         //$this->resultName = Util::path_join(sys_get_temp_dir(), "result" . spl_object_hash($this) . ".txt");
         $this->workDir = $workDir;
         $this->testName = $testName;
+        $this->testEnv = $testEnv;
     }
     /*
     * start tests task
@@ -60,7 +64,8 @@ class Task {
             " -r " . $listName .
             " -W " . stream_get_meta_data($this->resultFile)['uri'];
         //Log::d("create process with [", $cmd); 
-        $env = getenv();
+        //var_dump($this->testEnv);
+        $env = array_merge(getenv(), $this->testEnv);
         $env["TEST_PHP_EXECUTABLE"] = $this->testBinary;
         $env["NO_COLOR"] = "yes";
         $env["NO_INTERACTION"] = "1";

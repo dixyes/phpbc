@@ -31,14 +31,16 @@ class PHPbc{
                 testName: "control tests at $testdir",
                 testBinary: $config->ctrl["binary"],
                 workDir: $config->ctrl["workdir"],
-                testArgs: $config->ctrl["args"]
+                testArgs: $config->ctrl["args"],
+                testEnv: $config->ctrl["env"]
             );
             $exprTasks[$testdir] = new Task(
                 $test,
                 testName: "expr tests at $testdir",
                 testBinary: $config->expr["binary"],
                 workDir: $config->expr["workdir"],
-                testArgs: $config->expr["args"]
+                testArgs: $config->expr["args"],
+                testEnv: $config->expr["env"]
             );
         }
         foreach($ctrlTasks as $task){
