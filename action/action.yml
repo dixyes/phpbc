@@ -25,6 +25,10 @@ inputs:
     description: 'experiment php test workdir'
     required: false
     default: ''
+  tests:
+    description: 'use only these tests, supports regex, comma splited'
+    required: false
+    default: ''
   skip:
     description: 'skip tests, supports regex, comma splited'
     required: false

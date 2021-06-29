@@ -79,7 +79,7 @@ if($skipStr){
 
 // generate config
 $configData = [
-    //"tests" => ["tests/basic/.*"],
+    "tests" => array_filter(array_map('trim', explode(',', $inputs["tests"]))),
     "ctrl" => [
         "binary" => $ctrl_binary,
         "workdir" => $ctrl_workdir,
