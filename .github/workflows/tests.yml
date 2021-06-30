@@ -69,8 +69,8 @@ jobs:
           mysqld "--defaults-file=${{env.MYSQL_WORKDIR}}/expr/my.cnf" --daemonize --log_error=error.log || echo Failed start daemon >&2
           cat ${{env.MYSQL_WORKDIR}}/expr/data/error.log
           echo "::group::Create test database"
-          mysql --host=127.0.0.1 --port=3406 -u root -e "CREATE DATABASE test;"
-          mysql --host=127.0.0.1 --port=3506 -u root -e "CREATE DATABASE test;"
+          mysql --host=127.0.0.1 --port=3406 -u root -e "CREATE DATABASE test;CREATE DATABASE pdotest;"
+          mysql --host=127.0.0.1 --port=3506 -u root -e "CREATE DATABASE test;CREATE DATABASE pdotest;"
       - name: Run mysql server (win)
         if: runner.os == 'Windows'
         shell: powershell
@@ -86,7 +86,7 @@ jobs:
           for($i=0; $i -Lt 5; $i++){
             Write-Host "Waiting for ctrl mysql start"
             try{
-              & mysql --host=127.0.0.1 --port=3406 -u root -e "CREATE DATABASE test;" 2>&1
+              & mysql --host=127.0.0.1 --port=3406 -u root -e "CREATE DATABASE test;CREATE DATABASE pdotest;" 2>&1
               $done = $true
               break
             }catch{
@@ -103,7 +103,7 @@ jobs:
           for($i=0; $i -Lt 5; $i++){
             Write-Host "Waiting for expr mysql start"
             try{
-              & mysql --host=127.0.0.1 --port=3506 -u root -e "CREATE DATABASE test;" 2>&1
+              & mysql --host=127.0.0.1 --port=3506 -u root -e "CREATE DATABASE test;CREATE DATABASE pdotest;" 2>&1
               $done = $true
               break
             }catch{
@@ -121,5 +121,5 @@ jobs:
       - name: Test use actions
         uses: ./action
         with:
-          ctrl_env: MYSQL_TEST_HOST=localhost:3406,MYSQL_TEST_PORT=3406,PDO_MYSQL_TEST_DSN=mysql:host=127.0.0.1;port=3406;dbname=test,PDO_MYSQL_TEST_USER=root
-          expr_env: MYSQL_TEST_HOST=localhost:3506,MYSQL_TEST_PORT=3506,PDO_MYSQL_TEST_DSN=mysql:host=127.0.0.1;port=3506;dbname=test,PDO_MYSQL_TEST_USER=root
+          ctrl_env: MYSQL_TEST_HOST=localhost:3406,MYSQL_TEST_PORT=3406,PDO_MYSQL_TEST_DSN=mysql:host=127.0.0.1;port=3406;dbname=pdotest,PDO_MYSQL_TEST_USER=root
+          expr_env: MYSQL_TEST_HOST=localhost:3506,MYSQL_TEST_PORT=3506,PDO_MYSQL_TEST_DSN=mysql:host=127.0.0.1;port=3506;dbname=pdotest,PDO_MYSQL_TEST_USER=root
