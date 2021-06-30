@@ -36,54 +36,74 @@ class Util{
             }
         }
     }
+    private const AGGREGATE_DIRS = [
+        "mysql",
+        "mysqli",
+        "pdo_mysql",
+    ];
     public static function walk_tests(string $path = ".", array $filter = [], array $skip = []): array{
-        $filterRes = array_map(function($v){
-            //printf('skip pattern "%s"' . \PHP_EOL, str_replace("/", preg_quote(DIRECTORY_SEPARATOR), "|$v|"));
-            return str_replace("/", preg_quote(DIRECTORY_SEPARATOR), "|^$v$|");
+        $quoted_sep = preg_quote(DIRECTORY_SEPARATOR);
+        $filterRes = array_map(function($v)use($quoted_sep){
+            //printf('skip pattern "%s"' . \PHP_EOL, str_replace("/", $quoted_sep, "|$v|"));
+            return str_replace("/", $quoted_sep, "|^$v$|");
         }, $filter);
         $useFilter = count($filter) > 0;
-        $skipRes = array_map(function($v){
-            //printf('skip pattern "%s"' . \PHP_EOL, str_replace("/", preg_quote(DIRECTORY_SEPARATOR), "|$v|"));
-            return str_replace("/", preg_quote(DIRECTORY_SEPARATOR), "|^$v$|");
+        $skipRes = array_map(function($v)use($quoted_sep){
+            //printf('skip pattern "%s"' . \PHP_EOL, str_replace("/", $quoted_sep, "|$v|"));
+            return str_replace("/", $quoted_sep, "|^$v$|");
         }, $skip);
         $tests = [];
         $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path));
         $it->rewind();
         $sum = 0;
         while($it->valid()){
-            if(!$it->isDot()){
-                $dir = $it->getSubPath();
-                $fn = $it->getSubPathName();
-                if(str_ends_with($fn, ".phpt")){
-                    $skipThis = false;
-                    if($useFilter){
-                        $skipThis = true;
-                        foreach($filterRes as $re){
-                            if(preg_match($re, $fn)){
-                                //printf("skip %s\n", $fn);
-                                $skipThis = false;
-                                break;
-                            }
-                        }
-                    }
-                    if(!$skipThis){
-                        foreach($skipRes as $re){
-                            if(preg_match($re, $fn)){
-                                //printf("skip %s\n", $fn);
-                                $skipThis = true;
-                                break;
-                            }
-                        }
-                    }
-                    if(!$skipThis){
-                        if(!isset($tests[$dir])){
-                            $tests[$dir] = [];
-                        }
-                        $tests[$dir][] = $fn;
-                        $sum++;
+            if($it->isDot()){
+                $it->next();
+                continue;
+            }
+            $dir = $it->getSubPath();
+            $fn = $it->getSubPathName();
+            if(!str_ends_with($fn, ".phpt")){
+                $it->next();
+                continue;
+            }
+            $skipThis = false;
+            if($useFilter){
+                $skipThis = true;
+                foreach($filterRes as $re){
+                    if(preg_match($re, $fn)){
+                        //printf("skip %s\n", $fn);
+                        $skipThis = false;
+                        break;
                     }
                 }
             }
+            if(!$skipThis){
+                foreach($skipRes as $re){
+                    if(preg_match($re, $fn)){
+                        //printf("skip %s\n", $fn);
+                        $skipThis = true;
+                        break;
+                    }
+                }
+            }
+            if($skipThis){
+                $it->next();
+                continue;
+            }
+            foreach(static::AGGREGATE_DIRS as $ext){
+                if(preg_match("|(ext${quoted_sep}${ext}${quoted_sep}tests)${quoted_sep}.*|", $dir, $matches)){
+                    Log::d("match", $dir);
+                    $dir = $matches[1];
+                    Log::d("new", $dir);
+                }
+            }
+            if(!isset($tests[$dir])){
+                $tests[$dir] = [];
+            }
+            $tests[$dir][] = $fn;
+            $sum++;
+            
             $it->next();
         }
         uksort($tests, [Util::class, "test_dir_cmp"]);
