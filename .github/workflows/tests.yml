@@ -121,5 +121,6 @@ jobs:
       - name: Test use actions
         uses: ./action
         with:
+          tests: ext/mysqli/.*
           ctrl_env: MYSQL_TEST_HOST=localhost:3406,MYSQL_TEST_PORT=3406,PDO_MYSQL_TEST_DSN=mysql:host=127.0.0.1;port=3406;dbname=pdotest,PDO_MYSQL_TEST_USER=root
           expr_env: MYSQL_TEST_HOST=localhost:3506,MYSQL_TEST_PORT=3506,PDO_MYSQL_TEST_DSN=mysql:host=127.0.0.1;port=3506;dbname=pdotest,PDO_MYSQL_TEST_USER=root
