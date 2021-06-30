@@ -95,7 +95,6 @@ function gen_env($inputName): array{
 
 // generate config
 $configData = [
-    "workers" => 1,
     "tests" => array_filter(array_map('trim', explode(',', $inputs["tests"]))),
     "ctrl" => [
         "binary" => $ctrl_binary,
