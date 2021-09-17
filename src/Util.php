@@ -1,11 +1,13 @@
-<?php 
+<?php
 
 declare(strict_types=1);
 
 namespace PHPbc;
 
-class Util{
-    public static function enable_error_handler(){
+class Util
+{
+    public static function enable_error_handler()
+    {
         set_error_handler(function ($severity, $message, $file, $line) {
             if (!(error_reporting() & $severity)) {
                 // This error code is not included in error_reporting
@@ -14,114 +16,124 @@ class Util{
             throw new \ErrorException($message, 0, $severity, $file, $line);
         });
     }
-    public static function path_join($parent, $child){
-        if(str_ends_with($parent, "\\") || str_ends_with($parent, "/")){
+
+    public static function path_join($parent, $child): string
+    {
+        if (str_ends_with($parent, '\\') || str_ends_with($parent, '/')) {
             return $parent . $child;
         }
+
         return $parent . DIRECTORY_SEPARATOR . $child;
     }
-    private static function test_dir_cmp(string $a, string $b){
+
+    private static function test_dir_cmp(string $a, string $b)
+    {
         $aparts = preg_split('/[\\/\\\\]/', $a);
         $bparts = preg_split('/[\\/\\\\]/', $b);
-        if(count($aparts) !== count($bparts)){
+        if (count($aparts) !== count($bparts)) {
             return count($aparts) - count($bparts);
         }
-        foreach($aparts as $ak => $apart){
-            if(!isset($bparts[$ak])){
+        foreach ($aparts as $ak => $apart) {
+            if (!isset($bparts[$ak])) {
                 return count($aparts) - count($bparts);
             }
             $scmp = strcmp($apart, $bparts[$ak]);
-            if(0!=$scmp){
+            if ($scmp != 0) {
                 return $scmp;
             }
         }
     }
+
     private const AGGREGATE_DIRS = [
-        "mysql",
-        "mysqli",
-        "pdo_mysql",
+        'mysql',
+        'mysqli',
+        'pdo_mysql',
     ];
-    public static function walk_tests(string $path = ".", array $filter = [], array $skip = []): array{
+
+    public static function walk_tests(string $path = '.', array $filter = [], array $skip = []): array
+    {
         $quoted_sep = preg_quote(DIRECTORY_SEPARATOR);
-        $filterRes = array_map(function($v)use($quoted_sep){
+        $filterRes = array_map(function ($v) use ($quoted_sep) {
             //printf('skip pattern "%s"' . \PHP_EOL, str_replace("/", $quoted_sep, "|$v|"));
-            return str_replace("/", $quoted_sep, "|^$v$|");
+            return str_replace('/', $quoted_sep, "|^{$v}$|");
         }, $filter);
         $useFilter = count($filter) > 0;
-        $skipRes = array_map(function($v)use($quoted_sep){
+        $skipRes = array_map(function ($v) use ($quoted_sep) {
             //printf('skip pattern "%s"' . \PHP_EOL, str_replace("/", $quoted_sep, "|$v|"));
-            return str_replace("/", $quoted_sep, "|^$v$|");
+            return str_replace('/', $quoted_sep, "|^{$v}$|");
         }, $skip);
         $tests = [];
         $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path));
         $it->rewind();
         $sum = 0;
-        while($it->valid()){
-            if($it->isDot()){
+        while ($it->valid()) {
+            if ($it->isDot()) {
                 $it->next();
                 continue;
             }
             $dir = $it->getSubPath();
             $fn = $it->getSubPathName();
-            if(!str_ends_with($fn, ".phpt")){
+            if (!str_ends_with($fn, '.phpt')) {
                 $it->next();
                 continue;
             }
             $skipThis = false;
-            if($useFilter){
+            if ($useFilter) {
                 $skipThis = true;
-                foreach($filterRes as $re){
-                    if(preg_match($re, $fn)){
+                foreach ($filterRes as $re) {
+                    if (preg_match($re, $fn)) {
                         //printf("skip %s\n", $fn);
                         $skipThis = false;
                         break;
                     }
                 }
             }
-            if(!$skipThis){
-                foreach($skipRes as $re){
-                    if(preg_match($re, $fn)){
+            if (!$skipThis) {
+                foreach ($skipRes as $re) {
+                    if (preg_match($re, $fn)) {
                         //printf("skip %s\n", $fn);
                         $skipThis = true;
                         break;
                     }
                 }
             }
-            if($skipThis){
+            if ($skipThis) {
                 $it->next();
                 continue;
             }
-            foreach(static::AGGREGATE_DIRS as $ext){
-                if(preg_match("|(ext${quoted_sep}${ext}${quoted_sep}tests)${quoted_sep}.*|", $dir, $matches)){
-                    Log::d("match", $dir);
+            foreach (static::AGGREGATE_DIRS as $ext) {
+                if (preg_match("|(ext{$quoted_sep}{$ext}{$quoted_sep}tests){$quoted_sep}.*|", $dir, $matches)) {
+                    Log::d('match', $dir);
                     $dir = $matches[1];
-                    Log::d("new", $dir);
+                    Log::d('new', $dir);
                 }
             }
-            if(!isset($tests[$dir])){
+            if (!isset($tests[$dir])) {
                 $tests[$dir] = [];
             }
             $tests[$dir][] = $fn;
             $sum++;
-            
+
             $it->next();
         }
-        uksort($tests, [Util::class, "test_dir_cmp"]);
+        uksort($tests, [Util::class, 'test_dir_cmp']);
         //var_dump(array_keys($tests));
-        Log::i("found", $sum, "tests");
+        Log::i('found', $sum, 'tests');
+
         return $tests;
     }
+
     // stolen from run-tests.php
-    static function comp_line(string $l1, string $l2, bool $is_reg)
+    public static function comp_line(string $l1, string $l2, bool $is_reg)
     {
         if ($is_reg) {
             return preg_match('/^' . $l1 . '$/s', $l2);
-        } else {
-            return !strcmp($l1, $l2);
         }
+
+        return !strcmp($l1, $l2);
     }
 
-    static function count_array_diff(
+    public static function count_array_diff(
         array $ar1,
         array $ar2,
         bool $is_reg,
@@ -142,7 +154,7 @@ class Util{
         }
         if (--$steps > 0) {
             $eq1 = 0;
-            $st = (int)($steps / 2);
+            $st = (int) ($steps / 2);
 
             for ($ofs1 = $idx1 + 1; $ofs1 < $cnt1 && $st-- > 0; $ofs1++) {
                 $eq = @self::count_array_diff($ar1, $ar2, $is_reg, $w, $ofs1, $idx2, $cnt1, $cnt2, $st);
@@ -171,7 +183,9 @@ class Util{
 
         return $equal;
     }
-    static private function generate_array_diff(array $ar1, array $ar2, bool $is_reg, array $w): array{
+
+    private static function generate_array_diff(array $ar1, array $ar2, bool $is_reg, array $w): array
+    {
         global $context_line_count;
         $idx1 = 0;
         $cnt1 = @count($ar1);
@@ -180,7 +194,7 @@ class Util{
         $diff = [];
         $old1 = [];
         $old2 = [];
-        $number_len = max(3, strlen((string)max($cnt1 + 1, $cnt2 + 1)));
+        $number_len = max(3, strlen((string) max($cnt1 + 1, $cnt2 + 1)));
         $line_number_spec = '%0' . $number_len . 'd';
 
         /** Mapping from $idx2 to $idx1, including indexes of idx2 that are identical to idx1 as well as entries that don't have matches */
@@ -192,20 +206,19 @@ class Util{
                 $idx1++;
                 $idx2++;
                 continue;
-            } else {
-                $c1 = @self::count_array_diff($ar1, $ar2, $is_reg, $w, $idx1 + 1, $idx2, $cnt1, $cnt2, 10);
-                $c2 = @self::count_array_diff($ar1, $ar2, $is_reg, $w, $idx1, $idx2 + 1, $cnt1, $cnt2, 10);
-
-                if ($c1 > $c2) {
-                    $old1[$idx1] = sprintf("{$line_number_spec}- ", $idx1 + 1) . $w[$idx1++];
-                } elseif ($c2 > 0) {
-                    $old2[$idx2] = sprintf("{$line_number_spec}+ ", $idx2 + 1) . $ar2[$idx2++];
-                } else {
-                    $old1[$idx1] = sprintf("{$line_number_spec}- ", $idx1 + 1) . $w[$idx1++];
-                    $old2[$idx2] = sprintf("{$line_number_spec}+ ", $idx2 + 1) . $ar2[$idx2++];
-                }
-                $last_printed_context_line = $idx1;
             }
+            $c1 = @self::count_array_diff($ar1, $ar2, $is_reg, $w, $idx1 + 1, $idx2, $cnt1, $cnt2, 10);
+            $c2 = @self::count_array_diff($ar1, $ar2, $is_reg, $w, $idx1, $idx2 + 1, $cnt1, $cnt2, 10);
+
+            if ($c1 > $c2) {
+                $old1[$idx1] = sprintf("{$line_number_spec}- ", $idx1 + 1) . $w[$idx1++];
+            } elseif ($c2 > 0) {
+                $old2[$idx2] = sprintf("{$line_number_spec}+ ", $idx2 + 1) . $ar2[$idx2++];
+            } else {
+                $old1[$idx1] = sprintf("{$line_number_spec}- ", $idx1 + 1) . $w[$idx1++];
+                $old2[$idx2] = sprintf("{$line_number_spec}+ ", $idx2 + 1) . $ar2[$idx2++];
+            }
+            $last_printed_context_line = $idx1;
         }
         $mapping[$idx2] = $idx1;
 
@@ -286,7 +299,8 @@ class Util{
         return $diff;
     }
 
-    static public function generate_diff(string $wanted, ?string $wanted_re, string $output): string{
+    public static function generate_diff(string $wanted, ?string $wanted_re, string $output): string
+    {
         $w = explode("\n", $wanted);
         $o = explode("\n", $output);
         $r = is_null($wanted_re) ? $w : explode("\n", $wanted_re);

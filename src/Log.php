@@ -1,28 +1,46 @@
-<?php 
+<?php
 
 declare(strict_types=1);
 
 namespace PHPbc;
 
-class Log{
-    static private /* ?Log */ $logger = NULL;
+class Log
+{
+    /* ?Log */
+
+    private static $logger;
 
     //private Config $config;
     private $ffi;
+
     private $stdoutHandle;
+
     private $stderrHandle;
+
     private $csbi;
-    private /* int */ $stdoutAttr;
-    private /* int */ $stderrAttr;
-    const INTENSITY = 0x8;
-    const RED = 0x4;
-    const GREEN = 0x2;
-    const BLUE = 0x1;
-    private function __construct(){
+
+    /* int */
+
+    private $stdoutAttr;
+
+    /* int */
+
+    private $stderrAttr;
+
+    public const INTENSITY = 0x8;
+
+    public const RED = 0x4;
+
+    public const GREEN = 0x2;
+
+    public const BLUE = 0x1;
+
+    private function __construct()
+    {
         //$this->config = Config::init();
-        $this->ffi = NULL;
-        if("Windows" == PHP_OS_FAMILY && extension_loaded("FFI")){
-            $this->ffi = \FFI::cdef("
+        $this->ffi = null;
+        if ('Windows' == PHP_OS_FAMILY && extension_loaded('FFI')) {
+            $this->ffi = \FFI::cdef('
                 typedef uint64_t HANDLE;
                 typedef int32_t BOOL;
                 typedef struct _SMALL_RECT {
@@ -45,18 +63,18 @@ class Log{
                 BOOL GetConsoleScreenBufferInfo(HANDLE, PCONSOLE_SCREEN_BUFFER_INFO);
                 HANDLE GetStdHandle(int32_t);
                 BOOL SetConsoleTextAttribute(HANDLE, uint16_t);
-            ", "kernel32.dll");
-            $this->csbi = $this->ffi->new("CONSOLE_SCREEN_BUFFER_INFO");
+            ', 'kernel32.dll');
+            $this->csbi = $this->ffi->new('CONSOLE_SCREEN_BUFFER_INFO');
             $ret = $this->ffi->GetStdHandle(-11/* STD_OUTPUT_HANDLE */);
-            if(0 == $ret || -1 == $ret){
+            if ($ret == 0 || $ret == -1) {
                 // we cannot get std handle, nothing can be outputted;
-                throw new \RuntimeException("cannot get stdout handle");
+                throw new \RuntimeException('cannot get stdout handle');
             }
             $this->stdoutHandle = $ret;
             $ret = $this->ffi->GetStdHandle(-12/* STD_ERROR_HANDLE */);
-            if(0 == $ret || -1 == $ret){
+            if ($ret == 0 || $ret == -1) {
                 // we cannot get std handle, nothing can be outputted;
-                throw new \RuntimeException("cannot get stdout handle");
+                throw new \RuntimeException('cannot get stdout handle');
             }
             $this->stderrHandle = $ret;
             $this->ffi->GetConsoleScreenBufferInfo($this->stdoutHandle, \FFI::addr($this->csbi));
@@ -68,44 +86,48 @@ class Log{
             $this->ffi->SetConsoleTextAttribute($this->stderrHandle, 0x07);
         }
     }
-    function __destruct(){
-        if("Windows" == PHP_OS_FAMILY && extension_loaded("FFI")){
+
+    public function __destruct()
+    {
+        if ('Windows' == PHP_OS_FAMILY && extension_loaded('FFI')) {
             // restore bg
             $this->ffi->SetConsoleTextAttribute($this->stdoutHandle, $this->stdoutAttr);
             $this->ffi->SetConsoleTextAttribute($this->stderrHandle, $this->stderrAttr);
         }
     }
-    private function changeFgColor(int $color, int $fd){
+
+    private function changeFgColor(int $color, int $fd)
+    {
         $r = ($color & self::RED) === self::RED;
         $g = ($color & self::GREEN) === self::GREEN;
         $b = ($color & self::BLUE) === self::BLUE;
         $i = ($color & self::INTENSITY) === self::INTENSITY;
-        
+
         $unixColor = [];
-        if($r || $g || $b){
+        if ($r || $g || $b) {
             $num = 30 + ($r ? 1 : 0) + ($g ? 2 : 0) + ($b ? 4 : 0);
-            $unixColor[] = "$num";
+            $unixColor[] = "{$num}";
         }
-        if($i){
-            $unixColor[] = "1";
+        if ($i) {
+            $unixColor[] = '1';
         }
-        $unixColorStr = "\x1b[" . implode(";", $unixColor). "m";
-        
-        if(getenv("CI") === "true" || "Windows" !== PHP_OS_FAMILY){
+        $unixColorStr = "\x1b[" . implode(';', $unixColor) . 'm';
+
+        if (getenv('CI') === 'true' || 'Windows' !== PHP_OS_FAMILY) {
             // in gh ci
-            switch($fd){
+            switch ($fd) {
                 case 1:
-                    fprintf(STDOUT, "%s", $unixColorStr);
+                    fprintf(STDOUT, '%s', $unixColorStr);
                     break;
                 case 2:
-                    fprintf(STDERR, "%s", $unixColorStr);
+                    fprintf(STDERR, '%s', $unixColorStr);
                     break;
                 default:
-                    throw new \LogicException("bad fd num");
+                    throw new \LogicException('bad fd num');
             }
         }
-        if("Windows" === PHP_OS_FAMILY && extension_loaded("FFI")){
-            switch($fd){
+        if ('Windows' === PHP_OS_FAMILY && extension_loaded('FFI')) {
+            switch ($fd) {
                 case 1:
                     $this->ffi->SetConsoleTextAttribute($this->stdoutHandle, ($this->stdoutAttr & 0xff00) | $color);
                     break;
@@ -113,26 +135,28 @@ class Log{
                     $this->ffi->SetConsoleTextAttribute($this->stderrHandle, ($this->stderrAttr & 0xff00) | $color);
                     break;
                 default:
-                    throw new \LogicException("bad fd num");
+                    throw new \LogicException('bad fd num');
             }
         }
     }
-    private function cleanFgColor(int $fd){
-        if(getenv("CI") === "true" || "Windows" !== PHP_OS_FAMILY){
+
+    private function cleanFgColor(int $fd)
+    {
+        if (getenv('CI') === 'true' || 'Windows' !== PHP_OS_FAMILY) {
             // in gh ci
-            switch($fd){
+            switch ($fd) {
                 case 1:
-                    fprintf(STDOUT, "%s", "\x1b[0m");
+                    fprintf(STDOUT, '%s', "\x1b[0m");
                     break;
                 case 2:
-                    fprintf(STDERR, "%s", "\x1b[0m");
+                    fprintf(STDERR, '%s', "\x1b[0m");
                     break;
                 default:
-                    throw new \LogicException("bad fd num");
+                    throw new \LogicException('bad fd num');
             }
         }
-        if("Windows" === PHP_OS_FAMILY && extension_loaded("FFI")){
-            switch($fd){
+        if ('Windows' === PHP_OS_FAMILY && extension_loaded('FFI')) {
+            switch ($fd) {
                 case 1:
                     $this->ffi->SetConsoleTextAttribute($this->stdoutHandle, 0x07);
                     break;
@@ -140,95 +164,111 @@ class Log{
                     $this->ffi->SetConsoleTextAttribute($this->stderrHandle, 0x07);
                     break;
                 default:
-                    throw new \LogicException("bad fd num");
+                    throw new \LogicException('bad fd num');
             }
         }
     }
-    private function printThings(array $things){
+
+    private function printThings(array $things)
+    {
         $items = [];
         $idx = 0;
-        foreach($things as $k => $v){
-            if($idx++ === $k){
-                if(is_string($v)){
-                    echo " $v";
-                }else{
-                    echo " ";
+        foreach ($things as $k => $v) {
+            if ($idx++ === $k) {
+                if (is_string($v)) {
+                    echo " {$v}";
+                } else {
+                    echo ' ';
                     var_export($v);
                 }
-            }else{
-                echo " $k: ";
+            } else {
+                echo " {$k}: ";
                 var_export($v);
             }
         }
     }
-    private function log(int $color, int $fd, string $tag, array $things){
-        if(!("Windows" === PHP_OS_FAMILY && extension_loaded("FFI"))){
+
+    private function log(int $color, int $fd, string $tag, array $things)
+    {
+        if (!('Windows' === PHP_OS_FAMILY && extension_loaded('FFI'))) {
             ob_start();
         }
         $this->changeFgColor($color, $fd);
-        switch($fd){
+        switch ($fd) {
             case 1:
-                fprintf(STDOUT, "%s", $tag);
+                fprintf(STDOUT, '%s', $tag);
                 break;
             case 2:
-                fprintf(STDERR, "%s", $tag);
+                fprintf(STDERR, '%s', $tag);
                 break;
             default:
-                throw new \LogicException("bad fd num");
+                throw new \LogicException('bad fd num');
         }
         $this->cleanFgColor($fd);
-        if("Windows" === PHP_OS_FAMILY && extension_loaded("FFI")){
+        if ('Windows' === PHP_OS_FAMILY && extension_loaded('FFI')) {
             ob_start();
         }
         $this->printThings($things);
         echo PHP_EOL;
         $s = ob_get_clean();
-        switch($fd){
+        switch ($fd) {
             case 1:
-                fprintf(STDOUT, "%s", $s);
+                fprintf(STDOUT, '%s', $s);
                 break;
             case 2:
-                fprintf(STDERR, "%s", $s);
+                fprintf(STDERR, '%s', $s);
                 break;
             default:
-                throw new \LogicException("bad fd num");
+                throw new \LogicException('bad fd num');
         }
-
-    }
-    private function _d(...$args){
-        $this->log(self::RED|self::BLUE, 1, "[DBG]", $args);
-    }
-    private function _v(...$args){
-        $this->log(self::RED|self::BLUE|self::GREEN, 1, "[VER]", $args);
-    }
-    private function _i(...$args){
-        $this->log(self::RED|self::BLUE|self::GREEN|self::INTENSITY, 1, "[IFO]", $args);
-    }
-    private function _w(...$args){
-        $this->log(self::RED|self::BLUE, 2, "[WRN]", $args);
-    }
-    private function _e(...$args){
-        $this->log(self::RED, 2, "[ERR]", $args);
     }
 
-    
-    static public function init(){
-        if(!self::$logger){
+    private function _d(...$args)
+    {
+        $this->log(self::RED | self::BLUE, 1, '[DBG]', $args);
+    }
+
+    private function _v(...$args)
+    {
+        $this->log(self::RED | self::BLUE | self::GREEN, 1, '[VER]', $args);
+    }
+
+    private function _i(...$args)
+    {
+        $this->log(self::RED | self::BLUE | self::GREEN | self::INTENSITY, 1, '[IFO]', $args);
+    }
+
+    private function _w(...$args)
+    {
+        $this->log(self::RED | self::BLUE, 2, '[WRN]', $args);
+    }
+
+    private function _e(...$args)
+    {
+        $this->log(self::RED, 2, '[ERR]', $args);
+    }
+
+    public static function init()
+    {
+        if (!self::$logger) {
             self::$logger = new static();
         }
     }
-    static public function __callStatic(string $name, array $args){
-        switch($name){
-            case "d":
-            case "v":
-            case "i":
-            case "w":
-            case "e":
+
+    public static function __callStatic(string $name, array $args)
+    {
+        switch ($name) {
+            case 'd':
+            case 'v':
+            case 'i':
+            case 'w':
+            case 'e':
                 self::init();
-                $realName = "_$name";
-                return self::$logger->$realName(...$args);
+                $realName = "_{$name}";
+
+                return self::$logger->{$realName}(...$args);
             default:
-                throw new \LogicException(sprintf("no such static function on Log: %s", $name));
-        };
+                throw new \LogicException(sprintf('no such static function on Log: %s', $name));
+        }
     }
 }
