@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace PHPbc;
 
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+
 class Util
 {
     public static function enable_error_handler()
@@ -26,7 +29,7 @@ class Util
         return $parent . DIRECTORY_SEPARATOR . $child;
     }
 
-    private static function test_dir_cmp(string $a, string $b)
+    private static function test_dir_cmp(string $a, string $b): int
     {
         $aparts = preg_split('/[\\/\\\\]/', $a);
         $bparts = preg_split('/[\\/\\\\]/', $b);
@@ -42,6 +45,8 @@ class Util
                 return $scmp;
             }
         }
+
+        return 0;
     }
 
     private const AGGREGATE_DIRS = [
@@ -63,7 +68,8 @@ class Util
             return str_replace('/', $quoted_sep, "|^{$v}$|");
         }, $skip);
         $tests = [];
-        $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path));
+        /** @var RecursiveDirectoryIterator $it */
+        $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path));
         $it->rewind();
         $sum = 0;
         while ($it->valid()) {
@@ -184,6 +190,7 @@ class Util
         return $equal;
     }
 
+    /** @noinspection PhpFormatFunctionParametersMismatchInspection */
     private static function generate_array_diff(array $ar1, array $ar2, bool $is_reg, array $w): array
     {
         global $context_line_count;

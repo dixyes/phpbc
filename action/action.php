@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpUnhandledExceptionInspection */
 
 declare(strict_types=1);
 
@@ -59,7 +59,7 @@ $skip = [
 $ver = trim(shell_exec($ctrl_binary . ' -r "printf(\'%d.%d.%d\', PHP_MAJOR_VERSION,PHP_MINOR_VERSION,PHP_RELEASE_VERSION);"'));
 //$shortVer = trim(shell_exec($ctrl_binary . ' -r "printf("%d.%d", PHP_MAJOR_VERSION,PHP_MINOR_VERSION)"'));
 if (version_compare($ver, '7.4.0', '<')) {
-    // phpbdg tests stucks on php 7.3
+    // phpbdg tests stuck on php 7.3
     Log::i('skipping phpdbg tests');
     $skip[] = 'sapi/phpdbg.*';
 }
@@ -68,7 +68,7 @@ if ('Windows' == PHP_OS_FAMILY) {
     Log::i('skipping opcache jit tests');
     $skip[] = 'ext/opcache/tests/jit.*';
     if (version_compare($ver, '7.4.0', '<')) {
-        // openssl tests stucks on windows php 7.3
+        // openssl tests stuck on windows php 7.3
         Log::i('skipping openssl tests');
         $skip[] = 'ext/openssl.*';
     }

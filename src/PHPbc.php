@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PHPbc;
 
+use RuntimeException;
+
 class PHPbc
 {
     public static function run(?string $conffile = null)
@@ -30,21 +32,21 @@ class PHPbc
         foreach ($tests as $testdir => $test) {
             $ctrlTasks[$testdir] = new Task(
                 $test,
-                testType: 'control tests',
-                testDir: $testdir,
-                testBinary: $config->ctrl['binary'],
                 workDir: $config->ctrl['workdir'],
+                testBinary: $config->ctrl['binary'],
                 testArgs: $config->ctrl['args'],
-                testEnv: $config->ctrl['env']
+                testEnv: $config->ctrl['env'],
+                testType: 'control tests',
+                testDir: $testdir
             );
             $exprTasks[$testdir] = new Task(
                 $test,
-                testType: 'experiment tests',
-                testDir: $testdir,
-                testBinary: $config->expr['binary'],
                 workDir: $config->expr['workdir'],
+                testBinary: $config->expr['binary'],
                 testArgs: $config->expr['args'],
-                testEnv: $config->expr['env']
+                testEnv: $config->expr['env'],
+                testType: 'experiment tests',
+                testDir: $testdir
             );
         }
         foreach ($ctrlTasks as $task) {
@@ -156,8 +158,13 @@ class PHPbc
         // output
 
         foreach ($config->outputs as $output) {
-            $report = new Report($result, $output);
-            $report->generate();
+            try {
+                $report = new Report($result, $output);
+                $report->generate();
+            } catch (RuntimeException $e) {
+                Log::e("failed to generate report: {$e}");
+            }
         }
+        Log::i('done');
     }
 }

@@ -10,23 +10,39 @@ namespace PHPbc;
 */
 class Task
 {
-    // list file
-    /* resource */
-
+    /**
+     * @var resource list file
+     */
     private $list;
 
-    /* resource */
-
+    /**
+     * @var resource subprocess stdout
+     */
     private $stdout;
 
-    /* resource */
-
+    /**
+     * @var resource subprocess stderr
+     */
     private $stderr;
 
-    /* resource */
-
+    /**
+     * @var resource results file
+     */
     private $resultFile;
 
+    /**
+     * @var resource
+     */
+    private $process;
+
+    /**
+     * @var resource[]
+     */
+    private ?array $pipes;
+
+    /**
+     * @var string[]
+     */
     public array $results;
 
     private const COMMON_ARGS = [
@@ -35,6 +51,15 @@ class Task
 
     private const WAIT_TICK = 100000;
 
+    /**
+     * @param string[] $tests tests relative path in array
+     * @param string $workDir working dir for run-tests
+     * @param string $testBinary used php binary in tests
+     * @param array $testArgs appended arguments
+     * @param array $testEnv environments used in tests
+     * @param string $testType test type, some random string
+     * @param string $testDir test dir
+     */
     public function __construct(
         private array $tests,
         private string $workDir = '.',
@@ -51,9 +76,9 @@ class Task
         //$this->resultName = Util::path_join(sys_get_temp_dir(), "result" . spl_object_hash($this) . ".txt");
     }
 
-    /*
-    * start tests task
-    */
+    /**
+     * start tests task
+     */
     public function start(): void
     {
         // prepare tests lists
@@ -94,6 +119,9 @@ class Task
             $this->workDir,
             $env
         );
+        if ($this->process === false) {
+            throw new TaskException("create subrocess for {$this} failed");
+        }
     }
 
     private function end(): void
@@ -127,10 +155,11 @@ class Task
         //printf("end\n");
     }
 
-    /*
-    * wait tests task done
-    * timeout is in seconds, a negative timeout will make it wait infinite
-    */
+    /**
+     * wait tests task done
+     * @param float $timeout timeout is in seconds, a negative timeout will make it wait infinite
+     * @return bool if task successfully exited in time, return true, otherwise, false
+     */
     public function wait(float $timeout = -1): bool
     {
         if (!isset($this->process)) {

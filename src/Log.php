@@ -1,31 +1,49 @@
 <?php
 
+/**
+ * @noinspection PhpUndefinedMethodInspection
+ * @noinspection PhpComposerExtensionStubsInspection
+ */
+
 declare(strict_types=1);
 
 namespace PHPbc;
 
+use FFI;
+
+/**
+ * @method static d(...$variable)
+ * @method static v(...$variable)
+ * @method static i(...$variable)
+ * @method static w(...$variable)
+ * @method static e(...$variable)
+ */
 class Log
 {
-    /* ?Log */
-
-    private static $logger;
+    private static ?Log $logger = null;
 
     //private Config $config;
-    private $ffi;
 
+    private ?FFI $ffi = null;
+
+    /**
+     * @var resource
+     */
     private $stdoutHandle;
 
+    /**
+     * @var resource
+     */
     private $stderrHandle;
 
+    /**
+     * @var resource
+     */
     private $csbi;
 
-    /* int */
+    private int $stdoutAttr;
 
-    private $stdoutAttr;
-
-    /* int */
-
-    private $stderrAttr;
+    private int $stderrAttr;
 
     public const INTENSITY = 0x8;
 
@@ -40,7 +58,7 @@ class Log
         //$this->config = Config::init();
         $this->ffi = null;
         if ('Windows' == PHP_OS_FAMILY && extension_loaded('FFI')) {
-            $this->ffi = \FFI::cdef('
+            $this->ffi = FFI::cdef('
                 typedef uint64_t HANDLE;
                 typedef int32_t BOOL;
                 typedef struct _SMALL_RECT {
@@ -77,9 +95,9 @@ class Log
                 throw new \RuntimeException('cannot get stdout handle');
             }
             $this->stderrHandle = $ret;
-            $this->ffi->GetConsoleScreenBufferInfo($this->stdoutHandle, \FFI::addr($this->csbi));
+            $this->ffi->GetConsoleScreenBufferInfo($this->stdoutHandle, FFI::addr($this->csbi));
             $this->stdoutAttr = $this->csbi->wAttributes;
-            $this->ffi->GetConsoleScreenBufferInfo($this->stderrHandle, \FFI::addr($this->csbi));
+            $this->ffi->GetConsoleScreenBufferInfo($this->stderrHandle, FFI::addr($this->csbi));
             $this->stderrAttr = $this->csbi->wAttributes;
             // clean bg
             $this->ffi->SetConsoleTextAttribute($this->stdoutHandle, 0x07);

@@ -4,22 +4,31 @@ declare(strict_types=1);
 
 namespace PHPbc;
 
+use SplDoublyLinkedList;
+use SplQueue;
+
 class TaskManager
 {
-    private \SplQueue $queue;
+    private SplQueue $queue;
 
     private array $running;
 
     private int $runners;
 
+    /**
+     * @param int $runners runners count
+     */
     public function __construct(int $runners = 4)
     {
-        $this->queue = new \SplQueue();
-        $this->queue->setIteratorMode(\SplQueue::IT_MODE_DELETE);
+        $this->queue = new SplQueue();
+        $this->queue->setIteratorMode(SplDoublyLinkedList::IT_MODE_DELETE);
         $this->running = [];
         $this->runners = $runners;
     }
 
+    /**
+     * add a task into queue
+     */
     public function addTask(Task $task)
     {
         $this->queue->enqueue($task);
@@ -83,6 +92,9 @@ class TaskManager
         }
     }
 
+    /**
+     * run tasks
+     */
     public function run(): void
     {
         while ($this->queue->count() > 0) {

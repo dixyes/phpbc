@@ -4,9 +4,20 @@ declare(strict_types=1);
 
 namespace PHPbc;
 
+use LogicException;
+
+/**
+ * @property int workers
+ * @property string[] tests
+ * @property string[] skip
+ * @property string[] patches
+ * @property float timeout
+ * @property array ctrl
+ * @property array expr
+ */
 class Config implements \ArrayAccess
 {
-    private static $config;
+    private static ?Config $config = null;
 
     private array $_common = [
         'tests' => [],
@@ -110,49 +121,29 @@ class Config implements \ArrayAccess
 
             return self::$config;
         }
-        throw new \LogicException('bad path or data');
+        throw new LogicException('bad path or data');
     }
 
     public function __get($k)
     {
-        switch ($k) {
-            case 'tests':
-            case 'skip':
-            case 'patches':
-            case 'timeout':
-            case 'workers':
-            case 'outputs':
-                return $this->_common[$k];
-            case 'ctrl':
-            case 'expr':
-                $_k = "_{$k}";
-
-                return $this->{$_k};
-            default:
-                throw new \LogicException('no such thing');
-        }
+        return match ($k) {
+            'tests', 'skip', 'patches', 'timeout', 'workers', 'outputs' => $this->_common[$k],
+            'ctrl', 'expr' => $this->{"_{$k}"},
+            default => throw new LogicException('no such thing'),
+        };
     }
 
     public function __set($property, $value)
     {
-        throw new \LogicException('not settable');
+        throw new LogicException('not settable');
     }
 
     public function offsetExists(mixed $offset): bool
     {
-        switch ($offset) {
-            case 'tests':
-            case 'skip':
-            case 'patches':
-            case 'timeout':
-            case 'workers':
-            case 'outputs':
-            case 'ctrl':
-            case 'expr':
-                return true;
-            default:
-                return false;
-        }
+        return match ($offset) {
+            'tests', 'skip', 'patches', 'timeout', 'workers', 'outputs', 'ctrl', 'expr' => true,
+            default => false,
+        };
     }
 
     public function offsetGet(mixed $offset): mixed
@@ -162,11 +153,11 @@ class Config implements \ArrayAccess
 
     public function offsetSet(mixed $offset, mixed $value)
     {
-        throw new \LogicException('not settable');
+        throw new LogicException('not settable');
     }
 
     public function offsetUnset(mixed $offset)
     {
-        throw new \LogicException('not unsettable');
+        throw new LogicException('not unsettable');
     }
 }

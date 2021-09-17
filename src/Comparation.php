@@ -16,41 +16,41 @@ class Comparation
         $this->expr = $expr;
     }
 
-    private $diffs = [];
+    private array $diffs = [];
 
-    private $sames = [];
+    private array $sames = [];
 
     private function compare(string $test)
     {
         $testName = str_replace(DIRECTORY_SEPARATOR, '/', $test);
-        $cresult = $this->ctrl->results[$test];
+        $ctrl_result = $this->ctrl->results[$test];
         if (!isset($this->expr->results[$test])) {
             Log::w('no such tests in expriment', test: $test);
             $this->diffs[$testName] = [
-                'type' => "{$cresult}:UNKNOWN",
+                'type' => "{$ctrl_result}:UNKNOWN",
             ];
 
             return;
         }
 
-        $eresult = $this->expr->results[$test];
+        $expr_result = $this->expr->results[$test];
         $type = null;
         $diff = null;
         $reason = null;
         $outName = preg_replace('|\\.phpt$|', '.out', $test);
-        $coutName = Util::path_join($this->ctrl->getWorkDir(), $outName);
-        $eoutName = Util::path_join($this->expr->getWorkDir(), $outName);
-        if ($eresult === $cresult) {
-            $type = $cresult;
-            if ($cresult === 'FAILED' ||
-                $cresult === 'XFAILED' ||
-                $cresult === 'LEAKED') {
+        $ctrl_outName = Util::path_join($this->ctrl->getWorkDir(), $outName);
+        $expr_outName = Util::path_join($this->expr->getWorkDir(), $outName);
+        if ($expr_result === $ctrl_result) {
+            $type = $ctrl_result;
+            if ($ctrl_result === 'FAILED' ||
+                $ctrl_result === 'XFAILED' ||
+                $ctrl_result === 'LEAKED') {
                 // compare outputs when both failed
 
-                if (is_file($coutName) || is_file($eoutName)) {
+                if (is_file($ctrl_outName) || is_file($expr_outName)) {
                     // at least one side outputs is present
-                    $cout = is_file($coutName) ? file_get_contents($coutName) : 'Control outputs is not present';
-                    $eout = is_file($eoutName) ? file_get_contents($eoutName) : 'Experiment outputs is not present';
+                    $cout = is_file($ctrl_outName) ? file_get_contents($ctrl_outName) : 'Control outputs is not present';
+                    $eout = is_file($expr_outName) ? file_get_contents($expr_outName) : 'Experiment outputs is not present';
                     $eout = str_replace($this->expr->getWorkDir(), $this->ctrl->getWorkDir(), $eout);
                     //printf("compare %s with %s\n", $cout, $eout);
                     $diff = Util::generate_diff($cout, null, $eout);
@@ -68,12 +68,12 @@ class Comparation
             }
         } else {
             $diff = 'not generated';
-            $type = "{$cresult}:{$eresult}";
-            if (is_file($coutName) && is_file($eoutName)) {
-                $diff = Util::generate_diff(file_get_contents($coutName), null, file_get_contents($eoutName));
+            $type = "{$ctrl_result}:{$expr_result}";
+            if (is_file($ctrl_outName) && is_file($expr_outName)) {
+                $diff = Util::generate_diff(file_get_contents($ctrl_outName), null, file_get_contents($expr_outName));
             } else {
                 $diffName = Util::path_join($this->expr->getWorkDir(), preg_replace('|\\.phpt$|', '.diff', $test));
-                if ($cresult === 'PASSED' && is_file($diffName)) {
+                if ($ctrl_result === 'PASSED' && is_file($diffName)) {
                     $diff = file_get_contents($diffName);
                 }
             }

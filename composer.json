@@ -13,6 +13,7 @@
         "psr-4": {"PHPbc\\": "src/"}
     },
     "suggest": {
+        "ext-ffi": "*",
         "erusev/parsedown": ">=1.7.4"
     },
     "require": {

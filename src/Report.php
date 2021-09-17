@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PHPbc;
 
+use RuntimeException;
+
 class Report
 {
     public const JSON = 'json';
@@ -31,12 +33,12 @@ class Report
                     break;
                 case str_ends_with($lower, '.html') || str_ends_with($lower, '.htm'):
                     if (!class_exists('\\Parsedown', true)) {
-                        throw new \RuntimeException('erusev/parsedown is not installed');
+                        throw new RuntimeException('erusev/parsedown is not installed');
                     }
                     $type = self::HTML;
                     break;
                 default:
-                    throw new \RuntimeException("cannot determine {$outputSpec} file type");
+                    throw new RuntimeException("cannot determine {$outputSpec} file type");
             }
             $config = [
                 'type' => $type,
@@ -46,7 +48,7 @@ class Report
             $type = $outputSpec['type'];
             $config = $outputSpec;
         } else {
-            throw new \RuntimeException('strange output spec');
+            throw new RuntimeException('strange output spec');
         }
         $this->type = $type;
         $this->result = $result;
@@ -127,14 +129,15 @@ class Report
                 return $ret;
             case self::HTML:
                 if (!class_exists('\\Parsedown', true)) {
-                    throw new \RuntimeException('erusev/parsedown is not installed');
+                    throw new RuntimeException('erusev/parsedown is not installed');
                 }
+                /** @noinspection PhpUndefinedClassInspection */
                 $parsedown = new \Parsedown();
                 $str = $this->generateStr(self::MARKDOWN);
 
                 return $parsedown->text($str);
             default:
-                throw new \RuntimeException('not supported type ' . $this->type);
+                throw new RuntimeException('not supported type ' . $this->type);
         }
     }
 
