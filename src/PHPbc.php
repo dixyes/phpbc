@@ -28,7 +28,8 @@ class PHPbc{
         foreach($tests as $testdir => $test){
             $ctrlTasks[$testdir] = new Task(
                 $test,
-                testName: "control tests at $testdir",
+                testType: "control tests",
+                testDir: $testdir,
                 testBinary: $config->ctrl["binary"],
                 workDir: $config->ctrl["workdir"],
                 testArgs: $config->ctrl["args"],
@@ -36,7 +37,8 @@ class PHPbc{
             );
             $exprTasks[$testdir] = new Task(
                 $test,
-                testName: "expr tests at $testdir",
+                testType: "experiment tests",
+                testDir: $testdir,
                 testBinary: $config->expr["binary"],
                 workDir: $config->expr["workdir"],
                 testArgs: $config->expr["args"],

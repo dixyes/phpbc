@@ -9,43 +9,38 @@ namespace PHPbc;
 * a task contains a run-tests.php process and its subprocess,
 */
 class Task {
-    // tests will be executed in this task
-    private array $tests;
-    private string $testBinary;
-    private array $testArgs;
-    private array $testEnv;
     // list file
     private /* resource */ $list;
     private /* resource */ $stdout;
     private /* resource */ $stderr;
     private /* resource */ $resultFile;
 
-    public string $testName;
-    public string $workDir;
     public array $results;
 
     private const COMMON_ARGS = [
         "-q"
     ];
+    private const WAIT_TICK = 100000;
 
-    public function __construct(array $tests, string $workDir = ".", string $testBinary = PHP_BINARY, array $testArgs = [], $testName = "", array $testEnv = []){
+    public function __construct(
+        private array $tests,
+        private string $workDir = ".",
+        private string $testBinary = PHP_BINARY,
+        private array $testArgs = [],
+        private array $testEnv = [],
+        private string $testType = "",
+        private string $testDir = "",
+    ){
         if(count($tests) < 1){
             // bad args
             throw new TaskException("bad tests set");
         }
-        $this->tests = $tests;
-        $this->testBinary = $testBinary;
-        $this->testArgs = $testArgs;
         //$this->resultName = Util::path_join(sys_get_temp_dir(), "result" . spl_object_hash($this) . ".txt");
-        $this->workDir = $workDir;
-        $this->testName = $testName;
-        $this->testEnv = $testEnv;
     }
     /*
     * start tests task
     */
-    private const WAIT_TICK = 100000;
-    public function start(){
+    public function start():void{
         // prepare tests lists
         $this->resultFile = tmpfile();
         $this->list = tmpfile();
@@ -86,7 +81,7 @@ class Task {
         );
         return;
     }
-    private function end(){
+    private function end():void{
         //printf("ending\n");
         $resultName = stream_get_meta_data($this->resultFile)['uri'];
         $resultText = trim(file_get_contents($resultName));
@@ -142,5 +137,14 @@ class Task {
                 return false;
             }
         }
+    }
+    public function __toString():string{
+        return "{$this->testType} at {$this->testDir}";
+    }
+    public function getTestDir():string{
+        return $this->testDir;
+    }
+    public function getWorkDir():string{
+        return $this->workDir;
     }
 }
