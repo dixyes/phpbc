@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PHPbc;
 
+use function strlen;
+
 class Comparation
 {
     private Task $ctrl;

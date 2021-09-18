@@ -8,6 +8,9 @@ namespace PHPbc;
 * Task - a run-tests.php task
 * a task contains a run-tests.php process and its subprocess,
 */
+
+use function count;
+
 class Task
 {
     /**
@@ -45,11 +48,19 @@ class Task
      */
     public array $results;
 
+    /**
+     * @var int start time, in seconds
+     */
+    private int $startTime;
+
     private const COMMON_ARGS = [
         '-q',
     ];
 
     private const WAIT_TICK = 100000;
+
+    // max time for a test set, in seconds
+    private const STUCK_TIME = 30 * 60;
 
     /**
      * @param string[] $tests tests relative path in array
@@ -122,11 +133,11 @@ class Task
         if ($this->process === false) {
             throw new TaskException("create subrocess for {$this} failed");
         }
+        $this->startTime = gettimeofday()['sec'];
     }
 
     private function end(): void
     {
-        //printf("ending\n");
         $resultName = stream_get_meta_data($this->resultFile)['uri'];
         $resultText = trim(file_get_contents($resultName));
         $lines = preg_split('/[\r\n]+/', $resultText);
@@ -151,14 +162,23 @@ class Task
         unset($this->stdout);
         fclose($this->stderr);
         unset($this->stderr, $this->process);
+    }
 
-        //printf("end\n");
+    private function kill(): void
+    {
+        if (PHP_OS_FAMILY === 'Windows') {
+            $status = proc_get_status($this->process);
+            exec("taskkill /F /T /PID {$status['pid']}");
+        } else {
+            proc_terminate($this->process, 9);
+        }
+        $this->end();
     }
 
     /**
      * wait tests task done
      * @param float $timeout timeout is in seconds, a negative timeout will make it wait infinite
-     * @return bool if task successfully exited in time, return true, otherwise, false
+     * @return bool if task exited in time, return true, otherwise, false
      */
     public function wait(float $timeout = -1): bool
     {
@@ -173,6 +193,11 @@ class Task
             if (!$status['running']) {
                 $this->end();
 
+                return true;
+            }
+            if (gettimeofday()['sec'] - $this->startTime > self::STUCK_TIME) {
+                $this->kill();
+                Log::e("task {$this} is stuck, aborting");
                 return true;
             }
             if ($timeout < 0) {
