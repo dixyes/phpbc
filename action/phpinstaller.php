@@ -1,13 +1,31 @@
 <?php
 
+/**
+ * @noinspection PhpMissingFieldTypeInspection
+ */
+
 declare(strict_types=1);
 
 // php installer for phpbc running in actions
 // why shivammathur/setup-php overrides system-side php?
 
-require_once __DIR__ . '/../src/Log.php';
+// lightweight logger for actions environment
+class Log
+{
+    public static $prefix;
 
-use PHPbc\Log;
+    public static function i(...$args)
+    {
+        if (static::$prefix === null) {
+            if (getenv('CI') === 'true') {
+                static::$prefix = "\033[1m[phpinstaller:IFO]\033[0m ";
+            }
+            static::$prefix = '[phpinstaller:IFO] ';
+        }
+
+        echo static::$prefix . implode(' ', array_map(function ($x) {return "{$x}"; }, $args));
+    }
+}
 
 set_error_handler(function ($severity, $message, $file, $line) {
     if (!(error_reporting() & $severity)) {
@@ -19,30 +37,29 @@ set_error_handler(function ($severity, $message, $file, $line) {
 
 function setup_composer()
 {
-    do {
-        if ('Windows' === PHP_OS_FAMILY) {
-            Log::i('finding composer from path by where');
-            $cmdResult = shell_exec('where composer.phar');
-            if (!$cmdResult) {
-                Log::i('not found composer.phar in path');
-                break;
-            }
-            $phars = preg_split("|[\r\n]+|", trim($cmdResult));
-            copy($phars[0], 'php/composer.phar');
-
-            return;
-        }
-        Log::i('finding composer from path by which');
-        $cmdResult = shell_exec('which composer');
+    if ('Windows' === PHP_OS_FAMILY) {
+        Log::i('finding composer from path by where');
+        $cmdResult = shell_exec('where composer.phar');
         if (!$cmdResult) {
-            Log::i('not found composer in path');
-            break;
+            Log::i('not found composer.phar in path');
+            goto no_composer;
         }
-        $phar = trim($cmdResult);
-        symlink($phar, 'php/composer.phar');
+        $phars = preg_split("|[\r\n]+|", trim($cmdResult));
+        copy($phars[0], 'php/composer.phar');
 
         return;
-    } while (false);
+    }
+    Log::i('finding composer from path by which');
+    $cmdResult = shell_exec('which composer');
+    if (!$cmdResult) {
+        Log::i('not found composer in path');
+        goto no_composer;
+    }
+    $phar = trim($cmdResult);
+    symlink($phar, 'php/composer.phar');
+
+    return;
+    no_composer:
     Log::i('downloading composer');
     $opts = [
         'http' => [
