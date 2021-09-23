@@ -54,6 +54,8 @@ $skip = [
     // these tests may leak private info
     'ext/standard/tests/general_functions/phpinfo.phpt',
     'ext/openssl/tests/check_default_conf_path.phpt',
+    // this tests will always fail when soap is compiled as dynamic library
+    'ext/soap/tests/bug73037.phpt',
 ];
 
 $ver = trim(shell_exec($ctrl_binary . ' -r "printf(\'%d.%d.%d\', PHP_MAJOR_VERSION,PHP_MINOR_VERSION,PHP_RELEASE_VERSION);"'));
@@ -62,6 +64,18 @@ if (version_compare($ver, '7.4.0', '<')) {
     // phpbdg tests stuck on php 7.3
     Log::i('skipping phpdbg tests');
     $skip[] = 'sapi/phpdbg.*';
+}
+if (version_compare($ver, '8.1.0', '<')) {
+    // these tests are too slow on some platform,
+    // see https://github.com/php/php-src/commit/77201d70132b284c30a6b6fd5f5ac5db2f58f638
+    Log::i('skipping soap slow tests');
+    $skip[] = 'sapi/phpdbg.*';
+    $skip = array_merge($skip, [
+        'ext/soap/tests/bug70388.phpt',
+        'ext/soap/tests/bugs/bug31755.phpt',
+        'ext/soap/tests/bugs/bug69085.phpt',
+        'ext/soap/tests/bugs/bug77141.phpt',
+    ]);
 }
 if ('Windows' == PHP_OS_FAMILY) {
     // see https://bugs.php.net/bug.php?id=80905
