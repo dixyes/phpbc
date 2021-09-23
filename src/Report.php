@@ -83,7 +83,7 @@ class Report
                 }
                 // summary parts
                 $ret .= "\n## Summary\n";
-                $ret .= "\nWe regard a comparation have same result reported by run-test.php and same PHP output as \"exactly same result\", and breaking-change tests over not skipped tests as \"real bc rate\"\n";
+                $ret .= "\nWe regard a comparison have same result reported by run-test.php and same PHP output as \"exactly same result\", and breaking-change tests over not skipped tests as \"real bc rate\"\n";
                 $ret .= "\n| Tests have exactly same result | Tests ran | All tests found | Overall bc rate | Real bc rate |";
                 $ret .= "\n| - | - | - | - | - |";
                 $ret .= sprintf(
@@ -101,7 +101,7 @@ class Report
                     $ret .= "\n### {$test}\n\n";
                     $results = preg_split('|:|', $diff['type']);
                     if (isset($diff['reason'])) {
-                        $ret .= sprintf("Test %s in experiment beacuse\n\n", isset($results[1]) ? $results[1] : $diff['type']);
+                        $ret .= sprintf("Test %s in experiment because\n\n", $results[1] ?? $diff['type']);
                         $ret .= "```patch\n" . $diff['reason'] . "\n```\n\n";
                     }
                     if (count($results) < 2) {

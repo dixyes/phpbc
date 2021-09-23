@@ -6,7 +6,7 @@ namespace PHPbc;
 
 use function strlen;
 
-class Comparation
+class Comparison
 {
     private Task $ctrl;
 
@@ -27,7 +27,7 @@ class Comparation
         $testName = str_replace(DIRECTORY_SEPARATOR, '/', $test);
         $ctrl_result = $this->ctrl->results[$test];
         if (!isset($this->expr->results[$test])) {
-            Log::w('no such tests in expriment', test: $test);
+            Log::w('no such tests in experiment', test: $test);
             $this->diffs[$testName] = [
                 'type' => "{$ctrl_result}:UNKNOWN",
             ];

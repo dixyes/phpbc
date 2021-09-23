@@ -63,7 +63,7 @@ class PHPbc
         // compare results
         $cmps = [];
         foreach ($ctrlTasks as $ctest => $ctask) {
-            $cmps[] = (new Comparation($ctask, $exprTasks[$ctest]))->report();
+            $cmps[] = (new Comparison($ctask, $exprTasks[$ctest]))->report();
         }
 
         // merge results

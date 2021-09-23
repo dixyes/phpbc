@@ -131,7 +131,7 @@ class Task
             $env
         );
         if ($this->process === false) {
-            throw new TaskException("create subrocess for {$this} failed");
+            throw new TaskException("create subprocess for {$this} failed");
         }
         $this->startTime = gettimeofday()['sec'];
     }

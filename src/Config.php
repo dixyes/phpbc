@@ -14,6 +14,7 @@ use LogicException;
  * @property float timeout
  * @property array ctrl
  * @property array expr
+ * @property array outputs
  */
 class Config implements \ArrayAccess
 {
