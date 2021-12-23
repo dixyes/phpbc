@@ -152,12 +152,12 @@ class Config implements \ArrayAccess
         return $this->__get($offset);
     }
 
-    public function offsetSet(mixed $offset, mixed $value)
+    public function offsetSet(mixed $offset, mixed $value): void
     {
         throw new LogicException('not settable');
     }
 
-    public function offsetUnset(mixed $offset)
+    public function offsetUnset(mixed $offset): void
     {
         throw new LogicException('not unsettable');
     }
